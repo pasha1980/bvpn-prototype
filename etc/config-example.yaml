@@ -1,0 +1,22 @@
+wallet: "00000WALLET0ADDRESS"
+
+price:
+  gb: 1
+  bvpn: 1
+
+ports:
+  vpn: 48592
+  http: 8080
+
+# vpn_url: optional
+# http_url: optional
+
+peers:
+  - ip: 10.0.0.1
+    vpn_url: vpn1.peer
+    http_url: http://example1.peer/api
+    secret: "1234567890"
+
+  - ip: 10.0.0.2
+    vpn_url: vpn2.peer
+    http_url: http://example2.peer/api

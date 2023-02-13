@@ -11,8 +11,8 @@ type Kernel struct {
 
 	WalletAddress string
 
-	PublicIp        string
-	ChainServerPort string
+	PublicIp  string
+	ChainPort uint
 
 	Peers []chain_http.Peer
 }
