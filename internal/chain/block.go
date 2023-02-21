@@ -1,7 +1,7 @@
-package chain_storage
+package chain
 
 import (
-	"bvpn-prototype/internal/chain/chain_domain"
+	"bvpn-prototype/internal/protocols/entity"
 	"encoding/json"
 	"gorm.io/gorm"
 	"time"
@@ -15,23 +15,23 @@ type BlockModel struct {
 	timestamp    time.Time
 }
 
-func (b *BlockModel) modelToEntity() *chain_domain.Block {
-	entity := chain_domain.Block{
-		Number: uint64(b.ID),
-		Hash: b.hash,
+func (b *BlockModel) modelToEntity() *entity.Block {
+	entity := entity.Block{
+		Number:       uint64(b.ID),
+		Hash:         b.hash,
 		PreviousHash: b.previousHash,
-		TimeStamp: b.timestamp,
+		TimeStamp:    b.timestamp,
 	}
 
 	json.Unmarshal(b.data, &entity.Data)
 	return &entity
 }
 
-func blockToModel(block chain_domain.Block) *BlockModel {
+func blockToModel(block entity.Block) *BlockModel {
 	model := BlockModel{
-		hash: block.Hash,
+		hash:         block.Hash,
 		previousHash: block.PreviousHash,
-		timestamp: block.TimeStamp,
+		timestamp:    block.TimeStamp,
 	}
 
 	data, _ := json.Marshal(block.Data)

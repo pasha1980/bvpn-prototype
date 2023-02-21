@@ -1,8 +1,6 @@
-package entity
+package block_data
 
 type NodeStatus struct {
-	ChainStored
-
 	Node   string `json:"node"`
 	Active bool   `json:"active"`
 }

@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"bvpn-prototype/internal/chain/chain_http"
+	"bvpn-prototype/internal/protocols/entity"
 )
 
 type Kernel struct {
@@ -9,12 +9,10 @@ type Kernel struct {
 	PublicKey  []byte
 	PrivateKey []byte
 
-	WalletAddress string
-
 	PublicIp  string
 	ChainPort uint
 
-	Peers []chain_http.Peer
+	Nodes []entity.Node
 }
 
 func (k *Kernel) Run() {

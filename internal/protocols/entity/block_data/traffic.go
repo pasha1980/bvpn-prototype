@@ -1,13 +1,10 @@
-package entity
+package block_data
 
 import (
 	"time"
 )
 
 type Traffic struct {
-	ChainStored
-
-	ID        string    `json:"id"`
 	Node      string    `json:"node"`
 	Client    string    `json:"client"`
 	Gb        float64   `json:"gb"`

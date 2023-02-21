@@ -45,8 +45,7 @@ func kernelFromConfigs() (*internal.Kernel, error) {
 	}
 
 	var cfg struct {
-		Wallet string `yaml:"wallet"`
-		Price  struct {
+		Price struct {
 			Gb   *float64 `yaml:"gb"`
 			Mb   *float64 `yaml:"mb"`
 			Kb   *float64 `yaml:"kb"`
@@ -70,8 +69,7 @@ func kernelFromConfigs() (*internal.Kernel, error) {
 	}
 
 	kernel := internal.Kernel{
-		WalletAddress: cfg.Wallet,
-		ChainPort:     cfg.Ports.Http,
+		ChainPort: cfg.Ports.Http,
 		// todo
 	}
 

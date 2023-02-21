@@ -1,7 +1,7 @@
-package chain_storage
+package chain
 
 import (
-	"bvpn-prototype/internal/chain/chain_domain"
+	"bvpn-prototype/internal/protocols/entity"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -12,13 +12,13 @@ type ChainRepo struct {
 	db *gorm.DB
 }
 
-func (r *ChainRepo) GetLastBlock() *chain_domain.Block {
+func (r *ChainRepo) GetLastBlock() *entity.Block {
 	var blockModel BlockModel
 	r.db.Last(&blockModel)
 	return blockModel.modelToEntity()
 }
 
-func (r *ChainRepo) GetBlockByHash(hash string) *chain_domain.Block {
+func (r *ChainRepo) GetBlockByHash(hash string) *entity.Block {
 	var blockModel BlockModel
 	r.db.Where(&BlockModel{
 		hash: hash,
@@ -26,17 +26,17 @@ func (r *ChainRepo) GetBlockByHash(hash string) *chain_domain.Block {
 	return blockModel.modelToEntity()
 }
 
-func (r *ChainRepo) GetBlockByNumber(number uint64) *chain_domain.Block {
+func (r *ChainRepo) GetBlockByNumber(number uint64) *entity.Block {
 	var blockModel BlockModel
 	r.db.Find(&blockModel, uint(number))
 	return blockModel.modelToEntity()
 }
 
-func (r *ChainRepo) GetFullChain() []chain_domain.Block {
+func (r *ChainRepo) GetFullChain() []entity.Block {
 	var blockModels []BlockModel
 	r.db.Find(&blockModels)
 
-	var blocks []chain_domain.Block
+	var blocks []entity.Block
 	for _, model := range blockModels {
 		blocks = append(blocks, *model.modelToEntity())
 	}
@@ -44,7 +44,7 @@ func (r *ChainRepo) GetFullChain() []chain_domain.Block {
 	return blocks
 }
 
-func (r *ChainRepo) SaveBlock(block *chain_domain.Block) *chain_domain.Block {
+func (r *ChainRepo) SaveBlock(block *entity.Block) *entity.Block {
 	model := blockToModel(*block)
 	r.db.Save(model)
 	return model.modelToEntity()
