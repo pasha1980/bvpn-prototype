@@ -12,46 +12,75 @@ type ChainRepo struct {
 	db *gorm.DB
 }
 
-func (r *ChainRepo) GetLastBlock() *entity.Block {
+func (r *ChainRepo) GetLastBlock() (*entity.Block, error) {
 	var blockModel BlockModel
-	r.db.Last(&blockModel)
-	return blockModel.modelToEntity()
+	err := r.db.Last(&blockModel).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return blockModel.modelToEntity(), nil
 }
 
-func (r *ChainRepo) GetBlockByHash(hash string) *entity.Block {
+func (r *ChainRepo) GetBlockByHash(hash string) (*entity.Block, error) {
 	var blockModel BlockModel
-	r.db.Where(&BlockModel{
-		hash: hash,
-	}).Find(&blockModel)
-	return blockModel.modelToEntity()
+	err := r.db.Where(&BlockModel{
+		Hash: hash,
+	}).Find(&blockModel).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return blockModel.modelToEntity(), nil
 }
 
-func (r *ChainRepo) GetBlockByNumber(number uint64) *entity.Block {
+func (r *ChainRepo) GetBlockByNumber(number uint64) (*entity.Block, error) {
 	var blockModel BlockModel
-	r.db.Find(&blockModel, uint(number))
-	return blockModel.modelToEntity()
+	err := r.db.Find(&blockModel, uint(number)).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return blockModel.modelToEntity(), nil
 }
 
-func (r *ChainRepo) GetFullChain() []entity.Block {
+func (r *ChainRepo) GetFullChain() ([]entity.Block, error) {
 	var blockModels []BlockModel
-	r.db.Find(&blockModels)
+	err := r.db.Find(&blockModels).Error
+	if err != nil {
+		return nil, err
+	}
 
 	var blocks []entity.Block
 	for _, model := range blockModels {
 		blocks = append(blocks, *model.modelToEntity())
 	}
 
-	return blocks
+	return blocks, nil
 }
 
-func (r *ChainRepo) SaveBlock(block *entity.Block) *entity.Block {
+func (r *ChainRepo) SaveBlock(block *entity.Block) (*entity.Block, error) {
 	model := blockToModel(*block)
-	r.db.Save(model)
-	return model.modelToEntity()
+	err := r.db.Save(model).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return model.modelToEntity(), err
+}
+
+func (r *ChainRepo) ReplaceChain(chain []entity.Block) error {
+	tx := r.db.Raw("truncate table `chain`")
+
+	for _, block := range chain {
+		tx.Save(blockToModel(block))
+	}
+
+	return tx.Error
 }
 
 func NewChainRepo() *ChainRepo {
-	db, err := gorm.Open(sqlite.Open("/opt/bvpn/chain.db"), &gorm.Config{
+	db, err := gorm.Open(sqlite.Open("/opt/bvpn/chain.db"), &gorm.Config{ // todo: specify storage in api
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
 

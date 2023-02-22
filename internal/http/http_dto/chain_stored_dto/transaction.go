@@ -25,3 +25,14 @@ func (t *Transaction) ToEntity() block_data.ChainStored {
 		},
 	}
 }
+
+func TransactionToDto(entity block_data.ChainStored) Transaction {
+	tx := entity.Data.(block_data.Transaction)
+	return Transaction{
+		ID:         entity.ID,
+		From:       tx.From,
+		To:         tx.To,
+		Amount:     tx.Amount,
+		Commission: tx.Commission,
+	}
+}

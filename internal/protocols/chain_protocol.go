@@ -33,7 +33,11 @@ type ChainProtocol struct {
 }
 
 func (p *ChainProtocol) ValidateChain() error {
-	block := p.chainRepo.GetLastBlock()
+	block, err := p.chainRepo.GetLastBlock()
+	if err != nil {
+		return errors.New("Storage error")
+	}
+
 	if block == nil {
 		return nil
 	}
@@ -48,7 +52,11 @@ func (p *ChainProtocol) ValidateChain() error {
 			break
 		}
 
-		block = p.chainRepo.GetBlockByHash(block.Hash)
+		block, err = p.chainRepo.GetBlockByHash(block.Hash)
+		if err != nil {
+			return errors.New("Storage error")
+		}
+
 		if block == nil {
 			return errors.New("Invalid previous hash on block #" + strconv.FormatUint(block.Number, 10)) // todo: Custom error
 		}
@@ -106,7 +114,7 @@ func (p *ChainProtocol) AddToMempool(element block_data.ChainStored) {
 	if !mempool.IsExist(element.ID) {
 		mempool.AddNewElement(element)
 
-		// todo: send to next node
+		// todo: broadcast each other
 	}
 }
 
@@ -135,7 +143,11 @@ func (p *ChainProtocol) validateGivenChain(chain []entity.Block) error {
 		}
 	}
 
-	lastBlock := p.chainRepo.GetLastBlock()
+	lastBlock, err := p.chainRepo.GetLastBlock()
+	if err != nil {
+		return errors.New("Storage error")
+	}
+
 	if lastBlock != nil {
 		if len(chain) <= int(lastBlock.Number) {
 			return errors.New("Chain is not prioritized") // todo: Custom error

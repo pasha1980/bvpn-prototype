@@ -5,10 +5,10 @@ import (
 )
 
 type ChainStorageRepo interface {
-	GetLastBlock() *entity.Block
-	GetBlockByHash(hash string) *entity.Block
-	GetBlockByNumber(number uint64) *entity.Block
-	SaveBlock(block *entity.Block) *entity.Block
+	GetLastBlock() (*entity.Block, error)
+	GetBlockByHash(hash string) (*entity.Block, error)
+	GetBlockByNumber(number uint64) (*entity.Block, error)
+	SaveBlock(block *entity.Block) (*entity.Block, error)
 
 	ReplaceChain(chain []entity.Block) error
 }

@@ -21,3 +21,12 @@ func (o *Offer) ToEntity() block_data.ChainStored {
 		},
 	}
 }
+
+func OfferToDto(entity block_data.ChainStored) Offer {
+	offer := entity.Data.(block_data.Offer)
+	return Offer{
+		ID:    entity.ID,
+		Node:  offer.Node,
+		Price: offer.Price,
+	}
+}

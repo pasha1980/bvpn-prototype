@@ -21,3 +21,12 @@ func (n *NodeStatus) ToEntity() block_data.ChainStored {
 		},
 	}
 }
+
+func NodeStatusToDto(entity block_data.ChainStored) NodeStatus {
+	nodeStatus := entity.Data.(block_data.NodeStatus)
+	return NodeStatus{
+		ID:     entity.ID,
+		Node:   nodeStatus.Node,
+		Active: nodeStatus.Active,
+	}
+}
