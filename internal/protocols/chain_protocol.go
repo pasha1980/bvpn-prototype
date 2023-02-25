@@ -10,7 +10,6 @@ import (
 	"bvpn-prototype/internal/protocols/validators/block_validators"
 	"bvpn-prototype/internal/storage/chain"
 	"bvpn-prototype/internal/storage/mempool"
-	"errors"
 	"sort"
 	"time"
 )
@@ -168,7 +167,7 @@ func (p *ChainProtocol) AddToMempool(element block_data.ChainStored) {
 
 func (p *ChainProtocol) validateGivenChain(chain []entity.Block) error {
 	if len(chain) == 0 {
-		return errors.New("Empty chain") // todo: Custom error
+		return protocol_error.MessageError("Empty chain")
 	}
 
 	sort.Slice(chain, func(i, j int) bool {

@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func HealthCheck(node entity.Node) bool {
+func HealthCheck(node entity.Node) bool { // todo: In method
 	method := "/healthCheck"
 
 	req := fasthttp.AcquireRequest()
