@@ -1,4 +1,4 @@
-package data_validators
+package block_validators
 
 import (
 	"bvpn-prototype/internal/protocols/entity"

@@ -1,4 +1,4 @@
-package chain_stored_dto
+package mempool_data_dto
 
 import (
 	"bvpn-prototype/internal/protocols/entity/block_data"

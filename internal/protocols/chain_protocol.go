@@ -1,14 +1,18 @@
 package protocols
 
 import (
+	"bvpn-prototype/internal/http/http_out"
 	"bvpn-prototype/internal/mempool"
-	"bvpn-prototype/internal/protocols/data_validators"
+	"bvpn-prototype/internal/protocols/block_validators"
 	"bvpn-prototype/internal/protocols/entity"
 	"bvpn-prototype/internal/protocols/entity/block_data"
+	"bvpn-prototype/internal/protocols/hasher"
+	"bvpn-prototype/internal/protocols/protocol_error"
 	"bvpn-prototype/internal/protocols/repo"
 	"errors"
 	"sort"
 	"strconv"
+	"time"
 )
 
 /*
@@ -20,26 +24,27 @@ Chain methods:
 
 BlockMethods:
 - CreateNewBlock()
-- AddBlock(block Block)
++ AddBlock(block Block)
 + ValidateBlock(block Block)
-- ValidateBlockData(data) error
++ ValidateBlockData(data) error
 
 MempoolMethods:
 + AddToMempool(data)
 */
 
 type ChainProtocol struct {
+	nodes     []entity.Node
 	chainRepo repo.ChainStorageRepo
 }
 
 func (p *ChainProtocol) ValidateChain() error {
 	block, err := p.chainRepo.GetLastBlock()
 	if err != nil {
-		return errors.New("Storage error")
+		// todo: log error
 	}
 
 	if block == nil {
-		return nil
+		return p.AddInitialBlock()
 	}
 
 	for {
@@ -48,17 +53,17 @@ func (p *ChainProtocol) ValidateChain() error {
 			return err
 		}
 
-		if block.PreviousHash == "" {
+		if block.PreviousHash == entity.InitialBlockPrevHash {
 			break
 		}
 
 		block, err = p.chainRepo.GetBlockByHash(block.Hash)
 		if err != nil {
-			return errors.New("Storage error")
+			return protocol_error.MessageError("Storage error")
 		}
 
 		if block == nil {
-			return errors.New("Invalid previous hash on block #" + strconv.FormatUint(block.Number, 10)) // todo: Custom error
+			return protocol_error.MessageError("Invalid previous hash on block #" + strconv.FormatUint(block.Number, 10))
 		}
 	}
 
@@ -69,7 +74,14 @@ func (p *ChainProtocol) UpdateChain() error {
 	var err error
 	var chains [][]entity.Block
 
-	// todo: Get chains from nodes
+	for _, node := range p.nodes {
+		chain := http_out.GetFullChain(node)
+		chains = append(chains, chain)
+	}
+
+	if len(chains) == 0 {
+		return nil
+	}
 
 	for _, chain := range chains {
 		err = p.validateGivenChain(chain)
@@ -79,7 +91,7 @@ func (p *ChainProtocol) UpdateChain() error {
 
 		err = p.ReplaceChain(chain)
 		if err != nil {
-			return err
+			continue
 		}
 	}
 
@@ -94,7 +106,55 @@ func (p *ChainProtocol) ReplaceChain(chain []entity.Block) error {
 
 	err = p.chainRepo.ReplaceChain(chain)
 	if err != nil {
+		return protocol_error.LogInternalError(err.Error())
+	}
+
+	return nil
+}
+
+func (p *ChainProtocol) AddBlock(block entity.Block) error {
+	err := p.ValidateBlock(block)
+	if err != nil {
 		return err
+	}
+
+	lastBlock, err := p.chainRepo.GetLastBlock()
+	if err != nil {
+		return protocol_error.LogInternalError(err.Error())
+	}
+
+	if lastBlock == nil {
+		return p.AddInitialBlock()
+	}
+
+	if block.Number != lastBlock.Number+1 || block.PreviousHash != lastBlock.Hash {
+		return protocol_error.MessageError("Invalid block")
+	}
+
+	http_out.BroadcastBlock(block, p.nodes)
+
+	_, err = p.chainRepo.SaveBlock(block)
+	if err != nil {
+		return protocol_error.LogInternalError(err.Error())
+	}
+
+	return nil
+}
+
+func (p *ChainProtocol) AddInitialBlock() error {
+	timestamp, _ := time.Parse("2006-01-02 15:04:05", entity.InitialBlockTimestamp)
+
+	initialBlock := entity.Block{
+		Number:       1,
+		PreviousHash: entity.InitialBlockPrevHash,
+		TimeStamp:    timestamp,
+		Data:         []block_data.ChainStored{},
+	}
+
+	initialBlock.Hash = string(hasher.EncryptBlock(initialBlock))
+	_, err := p.chainRepo.SaveBlock(initialBlock)
+	if err != nil {
+		return protocol_error.LogInternalError(err.Error())
 	}
 
 	return nil
@@ -103,7 +163,7 @@ func (p *ChainProtocol) ReplaceChain(chain []entity.Block) error {
 func (p *ChainProtocol) ValidateBlock(block entity.Block) error {
 	var err error
 
-	for _, validator := range data_validators.GetValidationRules() {
+	for _, validator := range block_validators.GetValidationRules() {
 		err = validator(block)
 	}
 
@@ -114,7 +174,7 @@ func (p *ChainProtocol) AddToMempool(element block_data.ChainStored) {
 	if !mempool.IsExist(element.ID) {
 		mempool.AddNewElement(element)
 
-		// todo: broadcast each other
+		http_out.BroadcastMempool(element, p.nodes)
 	}
 }
 
@@ -145,12 +205,12 @@ func (p *ChainProtocol) validateGivenChain(chain []entity.Block) error {
 
 	lastBlock, err := p.chainRepo.GetLastBlock()
 	if err != nil {
-		return errors.New("Storage error")
+		return protocol_error.LogInternalError(err.Error())
 	}
 
 	if lastBlock != nil {
 		if len(chain) <= int(lastBlock.Number) {
-			return errors.New("Chain is not prioritized") // todo: Custom error
+			return protocol_error.MessageError("Chain is not prioritized")
 		}
 	}
 

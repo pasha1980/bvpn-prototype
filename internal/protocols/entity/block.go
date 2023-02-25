@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+const InitialBlockTimestamp = "2023-02-25 00:00:00"
+const InitialBlockPrevHash = "0000000000000000000000000000000000000000000000000000000000000000"
+
 type Block struct {
 	Number       uint64
 	Hash         string

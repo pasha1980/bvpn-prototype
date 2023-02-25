@@ -44,8 +44,8 @@ func GetRandomElements(count int) []block_data.ChainStored {
 }
 
 func IsExist(uuid uuid.UUID) bool {
-	_, ok := storage[uuid.String()]
-	return ok
+	_, exist := storage[uuid.String()]
+	return exist
 }
 
 func RemoveByIndex(index uuid.UUID) {

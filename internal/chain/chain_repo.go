@@ -59,8 +59,8 @@ func (r *ChainRepo) GetFullChain() ([]entity.Block, error) {
 	return blocks, nil
 }
 
-func (r *ChainRepo) SaveBlock(block *entity.Block) (*entity.Block, error) {
-	model := blockToModel(*block)
+func (r *ChainRepo) SaveBlock(block entity.Block) (*entity.Block, error) {
+	model := blockToModel(block)
 	err := r.db.Save(model).Error
 	if err != nil {
 		return nil, err

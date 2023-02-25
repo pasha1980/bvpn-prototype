@@ -1,7 +1,7 @@
 package http_in
 
 import (
-	chain_stored_dto2 "bvpn-prototype/internal/http/http_dto/chain_stored_dto"
+	"bvpn-prototype/internal/http/http_dto/mempool_data_dto"
 	"bvpn-prototype/internal/http/http_errors"
 	"bvpn-prototype/internal/protocols"
 	"errors"
@@ -14,7 +14,7 @@ type HttpController struct {
 }
 
 func (c *HttpController) addTx(ctx *fiber.Ctx) error {
-	var tx chain_stored_dto2.Transaction
+	var tx mempool_data_dto.Transaction
 
 	err := ctx.BodyParser(&tx)
 	if err != nil {
@@ -29,7 +29,7 @@ func (c *HttpController) addTx(ctx *fiber.Ctx) error {
 }
 
 func (c *HttpController) addOffer(ctx *fiber.Ctx) error {
-	var offer chain_stored_dto2.Offer
+	var offer mempool_data_dto.Offer
 
 	err := ctx.BodyParser(&offer)
 	if err != nil {
@@ -44,7 +44,7 @@ func (c *HttpController) addOffer(ctx *fiber.Ctx) error {
 }
 
 func (c *HttpController) addTraffic(ctx *fiber.Ctx) error {
-	var traffic chain_stored_dto2.Traffic
+	var traffic mempool_data_dto.Traffic
 
 	err := ctx.BodyParser(&traffic)
 	if err != nil {
@@ -59,7 +59,7 @@ func (c *HttpController) addTraffic(ctx *fiber.Ctx) error {
 }
 
 func (c *HttpController) addNodeStatus(ctx *fiber.Ctx) error {
-	var nodeStatus chain_stored_dto2.NodeStatus
+	var nodeStatus mempool_data_dto.NodeStatus
 
 	err := ctx.BodyParser(&nodeStatus)
 	if err != nil {
