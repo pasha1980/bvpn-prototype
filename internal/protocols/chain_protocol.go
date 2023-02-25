@@ -2,13 +2,14 @@ package protocols
 
 import (
 	"bvpn-prototype/internal/http/http_out"
-	"bvpn-prototype/internal/mempool"
-	"bvpn-prototype/internal/protocols/block_validators"
 	"bvpn-prototype/internal/protocols/entity"
 	"bvpn-prototype/internal/protocols/entity/block_data"
 	"bvpn-prototype/internal/protocols/hasher"
 	"bvpn-prototype/internal/protocols/protocol_error"
 	"bvpn-prototype/internal/protocols/repo"
+	"bvpn-prototype/internal/protocols/validators/block_validators"
+	"bvpn-prototype/internal/storage/chain"
+	"bvpn-prototype/internal/storage/mempool"
 	"errors"
 	"sort"
 	"time"
@@ -32,12 +33,12 @@ MempoolMethods:
 */
 
 type ChainProtocol struct {
-	nodes     []entity.Node
-	chainRepo repo.ChainStorageRepo
+	nodes []entity.Node
+	repo  repo.ChainStorageRepo
 }
 
 func (p *ChainProtocol) ValidateChain() error {
-	block, err := p.chainRepo.GetLastBlock()
+	block, err := p.repo.GetLastBlock()
 	if err != nil {
 		return protocol_error.LogInternalError(err.Error())
 	}
@@ -51,7 +52,7 @@ func (p *ChainProtocol) ValidateChain() error {
 			break
 		}
 
-		previousBlock, err := p.chainRepo.GetBlockByHash(block.PreviousHash)
+		previousBlock, err := p.repo.GetBlockByHash(block.PreviousHash)
 		if err != nil {
 			return protocol_error.LogInternalError(err.Error())
 		}
@@ -71,22 +72,22 @@ func (p *ChainProtocol) UpdateChain() {
 	var err error
 	var chains [][]entity.Block
 
-	for _, node := range p.nodes {
-		chain := http_out.GetFullChain(node)
-		chains = append(chains, chain)
+	for _, node := range GetPeerProtocol().GetPeers() {
+		peerChain := http_out.GetFullChain(node)
+		chains = append(chains, peerChain)
 	}
 
 	if len(chains) == 0 {
 		return
 	}
 
-	for _, chain := range chains {
-		err = p.validateGivenChain(chain)
+	for _, peerChain := range chains {
+		err = p.validateGivenChain(peerChain)
 		if err != nil {
 			continue
 		}
 
-		err = p.ReplaceChain(chain)
+		err = p.ReplaceChain(peerChain)
 		if err != nil {
 			continue
 		}
@@ -99,7 +100,7 @@ func (p *ChainProtocol) ReplaceChain(chain []entity.Block) error {
 		return err
 	}
 
-	err = p.chainRepo.ReplaceChain(chain)
+	err = p.repo.ReplaceChain(chain)
 	if err != nil {
 		return protocol_error.LogInternalError(err.Error())
 	}
@@ -108,7 +109,7 @@ func (p *ChainProtocol) ReplaceChain(chain []entity.Block) error {
 }
 
 func (p *ChainProtocol) AddBlock(block entity.Block) error {
-	lastBlock, err := p.chainRepo.GetLastBlock()
+	lastBlock, err := p.repo.GetLastBlock()
 	if err != nil {
 		return protocol_error.LogInternalError(err.Error())
 	}
@@ -118,9 +119,9 @@ func (p *ChainProtocol) AddBlock(block entity.Block) error {
 		return err
 	}
 
-	http_out.BroadcastBlock(block, p.nodes)
+	http_out.BroadcastBlock(block, GetPeerProtocol().GetPeers())
 
-	_, err = p.chainRepo.SaveBlock(block)
+	_, err = p.repo.SaveBlock(block)
 	if err != nil {
 		return protocol_error.LogInternalError(err.Error())
 	}
@@ -161,7 +162,7 @@ func (p *ChainProtocol) AddToMempool(element block_data.ChainStored) {
 	if !mempool.IsExist(element.ID) {
 		mempool.AddNewElement(element)
 
-		http_out.BroadcastMempool(element, p.nodes)
+		http_out.BroadcastMempool(element, GetPeerProtocol().GetPeers())
 	}
 }
 
@@ -186,7 +187,7 @@ func (p *ChainProtocol) validateGivenChain(chain []entity.Block) error {
 
 	}
 
-	lastBlock, err := p.chainRepo.GetLastBlock()
+	lastBlock, err := p.repo.GetLastBlock()
 	if err != nil {
 		return protocol_error.LogInternalError(err.Error())
 	}
@@ -198,4 +199,10 @@ func (p *ChainProtocol) validateGivenChain(chain []entity.Block) error {
 	}
 
 	return nil
+}
+
+func GetChainProtocol() *ChainProtocol {
+	return &ChainProtocol{
+		repo: chain.NewChainRepo(),
+	}
 }
