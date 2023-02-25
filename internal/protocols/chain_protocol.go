@@ -11,7 +11,6 @@ import (
 	"bvpn-prototype/internal/protocols/repo"
 	"errors"
 	"sort"
-	"strconv"
 	"time"
 )
 
@@ -40,7 +39,7 @@ type ChainProtocol struct {
 func (p *ChainProtocol) ValidateChain() error {
 	block, err := p.chainRepo.GetLastBlock()
 	if err != nil {
-		// todo: log error
+		return protocol_error.LogInternalError(err.Error())
 	}
 
 	if block == nil {
@@ -48,29 +47,27 @@ func (p *ChainProtocol) ValidateChain() error {
 	}
 
 	for {
-		err := p.ValidateBlock(*block)
-		if err != nil {
-			return err
-		}
-
 		if block.PreviousHash == entity.InitialBlockPrevHash {
 			break
 		}
 
-		block, err = p.chainRepo.GetBlockByHash(block.Hash)
+		previousBlock, err := p.chainRepo.GetBlockByHash(block.PreviousHash)
 		if err != nil {
-			return protocol_error.MessageError("Storage error")
+			return protocol_error.LogInternalError(err.Error())
 		}
 
-		if block == nil {
-			return protocol_error.MessageError("Invalid previous hash on block #" + strconv.FormatUint(block.Number, 10))
+		err = p.ValidateBlock(*block, previousBlock)
+		if err != nil {
+			return err
 		}
+
+		block = previousBlock
 	}
 
 	return nil
 }
 
-func (p *ChainProtocol) UpdateChain() error {
+func (p *ChainProtocol) UpdateChain() {
 	var err error
 	var chains [][]entity.Block
 
@@ -80,7 +77,7 @@ func (p *ChainProtocol) UpdateChain() error {
 	}
 
 	if len(chains) == 0 {
-		return nil
+		return
 	}
 
 	for _, chain := range chains {
@@ -94,8 +91,6 @@ func (p *ChainProtocol) UpdateChain() error {
 			continue
 		}
 	}
-
-	return nil
 }
 
 func (p *ChainProtocol) ReplaceChain(chain []entity.Block) error {
@@ -113,22 +108,14 @@ func (p *ChainProtocol) ReplaceChain(chain []entity.Block) error {
 }
 
 func (p *ChainProtocol) AddBlock(block entity.Block) error {
-	err := p.ValidateBlock(block)
-	if err != nil {
-		return err
-	}
-
 	lastBlock, err := p.chainRepo.GetLastBlock()
 	if err != nil {
 		return protocol_error.LogInternalError(err.Error())
 	}
 
-	if lastBlock == nil {
-		return p.AddInitialBlock()
-	}
-
-	if block.Number != lastBlock.Number+1 || block.PreviousHash != lastBlock.Hash {
-		return protocol_error.MessageError("Invalid block")
+	err = p.ValidateBlock(block, lastBlock)
+	if err != nil {
+		return err
 	}
 
 	http_out.BroadcastBlock(block, p.nodes)
@@ -152,19 +139,19 @@ func (p *ChainProtocol) AddInitialBlock() error {
 	}
 
 	initialBlock.Hash = string(hasher.EncryptBlock(initialBlock))
-	_, err := p.chainRepo.SaveBlock(initialBlock)
+	err := p.AddBlock(initialBlock)
 	if err != nil {
-		return protocol_error.LogInternalError(err.Error())
+		return err
 	}
 
 	return nil
 }
 
-func (p *ChainProtocol) ValidateBlock(block entity.Block) error {
+func (p *ChainProtocol) ValidateBlock(block entity.Block, previousBlock *entity.Block) error {
 	var err error
 
 	for _, validator := range block_validators.GetValidationRules() {
-		err = validator(block)
+		err = validator(block, previousBlock)
 	}
 
 	return err
@@ -188,19 +175,15 @@ func (p *ChainProtocol) validateGivenChain(chain []entity.Block) error {
 	})
 
 	for i, block := range chain {
-		err := p.ValidateBlock(block)
-		if err != nil {
-			return err
-		}
-
 		if block.IsInitial() {
 			break
 		}
 
-		nextBlock := chain[i+1]
-		if block.PreviousHash != nextBlock.Hash || block.Number != nextBlock.Number+1 {
-			return errors.New("Disconnected chain") // todo: Custom error
+		err := p.ValidateBlock(block, &chain[i+1])
+		if err != nil {
+			return err
 		}
+
 	}
 
 	lastBlock, err := p.chainRepo.GetLastBlock()

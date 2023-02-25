@@ -1,10 +1,10 @@
 package protocol_error
 
-const ErrorLog ErrorCode = 2
+const LogErrorCode ErrorCode = 2
 
 func LogError(message string) *Error {
 	return &Error{
-		Code:    ErrorLog,
+		Code:    LogErrorCode,
 		Message: message,
 	}
 }

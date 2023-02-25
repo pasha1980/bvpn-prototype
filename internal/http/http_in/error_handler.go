@@ -18,16 +18,16 @@ func errorHandler(ctx *fiber.Ctx, err error) error {
 		break
 	case *protocol_error.Error:
 		switch err.(*protocol_error.Error).Code {
-		case protocol_error.ErrorMessage:
+		case protocol_error.MessageErrorCode:
 			code = 400
 			message = err.Error()
 			break
-		case protocol_error.ErrorLog:
+		case protocol_error.LogErrorCode:
 			code = 400
 			message = err.Error()
 			logger.LogError(message)
 			break
-		case protocol_error.InternalErrorLog:
+		case protocol_error.LogInternalErrorCode:
 			code = 500
 			message = err.Error()
 			logger.LogError(message)

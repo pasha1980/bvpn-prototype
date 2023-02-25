@@ -1,12 +1,14 @@
 package block_validators
 
-import "bvpn-prototype/internal/protocols/entity"
+import (
+	"bvpn-prototype/internal/protocols/entity"
+)
 
-var validationRules = []func(block entity.Block) error{
+var blockValidationRules = []func(block entity.Block, previousBlock *entity.Block) error{
 	hashValidation,
 	timestampValidation,
 }
 
-func GetValidationRules() []func(block entity.Block) error {
-	return validationRules
+func GetValidationRules() []func(block entity.Block, previousBlock *entity.Block) error {
+	return blockValidationRules
 }

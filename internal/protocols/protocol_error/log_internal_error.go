@@ -1,10 +1,10 @@
 package protocol_error
 
-const InternalErrorLog ErrorCode = 3
+const LogInternalErrorCode ErrorCode = 3
 
 func LogInternalError(message string) *Error {
 	return &Error{
-		Code:    InternalErrorLog,
+		Code:    LogInternalErrorCode,
 		Message: message,
 	}
 }
