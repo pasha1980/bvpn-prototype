@@ -1,7 +1,6 @@
 package http_in
 
 import (
-	"bvpn-prototype/internal/logger"
 	"bvpn-prototype/internal/protocols/protocol_error"
 	"github.com/gofiber/fiber/v2"
 )
@@ -17,23 +16,7 @@ func errorHandler(ctx *fiber.Ctx, err error) error {
 		message = err.(*fiber.Error).Message
 		break
 	case *protocol_error.Error:
-		switch err.(*protocol_error.Error).Code {
-		case protocol_error.MessageErrorCode:
-			code = 400
-			message = err.Error()
-			break
-		case protocol_error.LogErrorCode:
-			code = 400
-			message = err.Error()
-			logger.LogError(message)
-			break
-		case protocol_error.LogInternalErrorCode:
-			code = 500
-			message = err.Error()
-			logger.LogError(message)
-			break
-		}
-		break
+		message, code = protocol_error.Handle(err.(*protocol_error.Error))
 	default:
 		code = 400
 		message = "Undefined Error"
