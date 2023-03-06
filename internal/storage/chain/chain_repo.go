@@ -44,9 +44,9 @@ func (r *ChainRepo) GetBlockByNumber(number uint64) (*entity.Block, error) {
 	return blockModel.modelToEntity(), nil
 }
 
-func (r *ChainRepo) GetFullChain() ([]entity.Block, error) {
+func (r *ChainRepo) GetChain(limit int, offset int) ([]entity.Block, error) {
 	var blockModels []BlockModel
-	err := r.db.Find(&blockModels).Error
+	err := r.db.Limit(limit).Offset(offset).Find(&blockModels).Error
 	if err != nil {
 		return nil, err
 	}

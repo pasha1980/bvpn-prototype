@@ -165,6 +165,15 @@ func (p *ChainProtocol) AddToMempool(element block_data.ChainStored) {
 	}
 }
 
+func (p *ChainProtocol) GetChain(limit int, offset int) ([]entity.Block, error) {
+	c, err := p.repo.GetChain(limit, offset)
+	if err != nil {
+		return nil, protocol_error.LogInternalError(err.Error())
+	}
+
+	return c, nil
+}
+
 func (p *ChainProtocol) validateGivenChain(chain []entity.Block) error {
 	if len(chain) == 0 {
 		return protocol_error.MessageError("Empty chain")
