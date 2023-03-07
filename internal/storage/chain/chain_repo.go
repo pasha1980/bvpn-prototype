@@ -2,6 +2,7 @@ package chain
 
 import (
 	"bvpn-prototype/internal/protocols/entity"
+	"bvpn-prototype/internal/storage/config"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -80,7 +81,7 @@ func (r *ChainRepo) ReplaceChain(chain []entity.Block) error {
 }
 
 func NewChainRepo() *ChainRepo {
-	db, err := gorm.Open(sqlite.Open("/opt/bvpn/chain.db"), &gorm.Config{ // todo: specify storage in api
+	db, err := gorm.Open(sqlite.Open(config.Get().StorageDirectory+"/chain.db"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
 

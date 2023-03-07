@@ -19,7 +19,7 @@ func errorHandler(ctx *fiber.Ctx, err error) error {
 		message, code = protocol_error.Handle(err.(*protocol_error.Error))
 	default:
 		code = 400
-		message = "Undefined Error"
+		message = err.Error()
 		break
 	}
 

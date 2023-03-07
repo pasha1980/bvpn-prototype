@@ -2,12 +2,11 @@ package peer
 
 import (
 	"bvpn-prototype/internal/protocols/entity"
+	"bvpn-prototype/internal/storage/config"
 	"encoding/base64"
 	"encoding/json"
 	"os"
 )
-
-const sourceFile = "/opt/bvpn/peers.txt"
 
 type PeerRepo struct {
 	storage PeerStorage
@@ -52,7 +51,7 @@ func (r *PeerRepo) isExist(peer entity.Node) bool {
 }
 
 func (r *PeerRepo) updateData() {
-	base64Encoded, err := os.ReadFile(sourceFile)
+	base64Encoded, err := os.ReadFile(config.Get().StorageDirectory + "/peers.txt")
 	if err != nil {
 		r.storeData()
 	}
@@ -71,7 +70,7 @@ func (r *PeerRepo) updateData() {
 func (r *PeerRepo) storeData() {
 	jsonEncoded, _ := json.Marshal(r.storage)
 	base64Encoded := base64.StdEncoding.EncodeToString(jsonEncoded)
-	err := os.WriteFile(sourceFile, []byte(base64Encoded), 0666)
+	err := os.WriteFile(config.Get().StorageDirectory+"/peers.txt", []byte(base64Encoded), 0666)
 	if err != nil {
 		// todo: what to do
 	}
@@ -79,6 +78,7 @@ func (r *PeerRepo) storeData() {
 
 func NewPeerRepo() *PeerRepo {
 	repo := &PeerRepo{}
+	repo.updateData()
 	repo.storeData()
 	return repo
 }

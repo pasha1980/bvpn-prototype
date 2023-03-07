@@ -1,6 +1,9 @@
 package http_dto
 
-import "bvpn-prototype/internal/protocols/entity"
+import (
+	"bvpn-prototype/internal/protocols/entity"
+	"bvpn-prototype/internal/storage/config"
+)
 
 type PeerDto struct {
 	URL string `json:"url"`
@@ -14,5 +17,7 @@ func (d *PeerDto) ToEntity() entity.Node {
 }
 
 func MakeMeDTO() PeerDto {
-	return PeerDto{}
+	return PeerDto{
+		URL: config.Get().URL,
+	}
 }

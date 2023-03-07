@@ -2,6 +2,7 @@ package main
 
 import (
 	"bvpn-prototype/internal"
+	"bvpn-prototype/internal/protocols/entity"
 	"fmt"
 	"github.com/jessevdk/go-flags"
 	"gopkg.in/yaml.v3"
@@ -34,7 +35,7 @@ func main() {
 
 		kernel.Run()
 	default:
-		fmt.Println("Hello")
+		fmt.Println("Hello") // todo
 	}
 }
 
@@ -45,21 +46,22 @@ func kernelFromConfigs() (*internal.Kernel, error) {
 	}
 
 	var cfg struct {
-		Price struct {
-			Gb   *float64 `yaml:"gb"`
-			Mb   *float64 `yaml:"mb"`
-			Kb   *float64 `yaml:"kb"`
-			Bvpn float64  `yaml:"bvpn"`
-		} `yaml:"price"`
-		Ports struct {
-			Vpn  uint `yaml:"vpn"`
-			Http uint `yaml:"http"`
+		//Price struct {
+		//	Gb   *float64 `yaml:"gb"`
+		//	Mb   *float64 `yaml:"mb"`
+		//	Kb   *float64 `yaml:"kb"`
+		//	Bvpn float64  `yaml:"bvpn"`
+		//} `yaml:"price"`
+		HttpUrl string `yaml:"http_url"`
+		Ports   struct {
+			//Vpn  uint64 `yaml:"vpn"`
+			Http uint64 `yaml:"http"`
 		} `yaml:"ports"`
 		Peers []struct {
-			Ip      string  `yaml:"ip"`
-			VpnUrl  string  `yaml:"vpn_url"`
-			HttpUrl string  `yaml:"http_url"`
-			Secret  *string `yaml:"secret"`
+			Ip string `yaml:"ip"`
+			//VpnUrl  string  `yaml:"vpn_url"`
+			HttpUrl string `yaml:"http_url"`
+			//Secret  *string `yaml:"secret"`
 		} `yaml:"peers"`
 	}
 
@@ -68,9 +70,22 @@ func kernelFromConfigs() (*internal.Kernel, error) {
 		return nil, err
 	}
 
+	var peers []entity.Node
+	for _, peerCfg := range cfg.Peers {
+		peers = append(peers, entity.Node{
+			URL: peerCfg.HttpUrl,
+			IP:  peerCfg.Ip,
+		})
+	}
+
+	if cfg.Ports.Http == 0 {
+		cfg.Ports.Http = 80
+	}
+
 	kernel := internal.Kernel{
-		ChainPort: cfg.Ports.Http,
-		// todo
+		URL:      cfg.HttpUrl,
+		HttpPort: cfg.Ports.Http,
+		Peers:    peers,
 	}
 
 	return &kernel, nil

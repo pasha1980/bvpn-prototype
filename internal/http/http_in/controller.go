@@ -9,20 +9,21 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"net/http"
 	"reflect"
+	"strings"
 )
 
 type HttpController struct {
-	ChainProtocol protocols.ChainProtocol
-	PeerProtocol  protocols.PeerProtocol
+	ChainProtocol *protocols.ChainProtocol
+	PeerProtocol  *protocols.PeerProtocol
 }
 
-func (c *HttpController) healthCheck(ctx *fiber.Ctx) error {
+func (c HttpController) HealthCheck(ctx *fiber.Ctx) error {
 	return ctx.Status(http.StatusOK).JSON(map[string]bool{
 		"success": true,
 	})
 }
 
-func (c *HttpController) addTx(ctx *fiber.Ctx) error {
+func (c HttpController) AddTx(ctx *fiber.Ctx) error {
 	var tx mempool_data_dto.Transaction
 
 	err := ctx.BodyParser(&tx)
@@ -37,7 +38,7 @@ func (c *HttpController) addTx(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *HttpController) addOffer(ctx *fiber.Ctx) error {
+func (c HttpController) AddOffer(ctx *fiber.Ctx) error {
 	var offer mempool_data_dto.Offer
 
 	err := ctx.BodyParser(&offer)
@@ -52,7 +53,7 @@ func (c *HttpController) addOffer(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *HttpController) addTraffic(ctx *fiber.Ctx) error {
+func (c HttpController) AddTraffic(ctx *fiber.Ctx) error {
 	var traffic mempool_data_dto.Traffic
 
 	err := ctx.BodyParser(&traffic)
@@ -67,7 +68,7 @@ func (c *HttpController) addTraffic(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *HttpController) addNodeStatus(ctx *fiber.Ctx) error {
+func (c HttpController) AddNodeStatus(ctx *fiber.Ctx) error {
 	var nodeStatus mempool_data_dto.NodeStatus
 
 	err := ctx.BodyParser(&nodeStatus)
@@ -82,7 +83,7 @@ func (c *HttpController) addNodeStatus(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *HttpController) addBlock(ctx *fiber.Ctx) error {
+func (c HttpController) AddBlock(ctx *fiber.Ctx) error {
 	var blockDto http_dto.BlockDto
 
 	err := ctx.BodyParser(&blockDto)
@@ -100,7 +101,7 @@ func (c *HttpController) addBlock(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c *HttpController) getChain(ctx *fiber.Ctx) error {
+func (c HttpController) GetChain(ctx *fiber.Ctx) error {
 	var body map[string]int
 	err := ctx.BodyParser(&body)
 	if err != nil {
@@ -125,7 +126,7 @@ func (c *HttpController) getChain(ctx *fiber.Ctx) error {
 	return ctx.Status(http.StatusOK).JSON(chainDto)
 }
 
-func (c *HttpController) addPeer(ctx *fiber.Ctx) error {
+func (c HttpController) AddPeer(ctx *fiber.Ctx) error {
 	var body http_dto.PeerDto
 	err := ctx.BodyParser(&body)
 	if err != nil {
@@ -143,9 +144,12 @@ func (c *HttpController) addPeer(ctx *fiber.Ctx) error {
 }
 
 func (c *HttpController) HttpEntrypoint(ctx *fiber.Ctx) error {
-	methodName := ctx.Params("method")
-	method := reflect.ValueOf(c).MethodByName(methodName)
-	if method.IsZero() || method.IsValid() {
+	methodParam := ctx.Params("method")
+	firstLetter := strings.ToUpper(methodParam[0:1])
+	methodName := firstLetter + methodParam[1:]
+	method := reflect.ValueOf(*c).MethodByName(methodName)
+
+	if !method.IsValid() {
 		return http_errors.ErrorMethodNotFound
 	}
 
@@ -157,5 +161,5 @@ func (c *HttpController) HttpEntrypoint(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	return errors.New(response.MethodByName("Error").Call([]reflect.Value{})[0].String()) // todo: test
+	return errors.New(response.MethodByName("Error").Call([]reflect.Value{})[0].String())
 }
