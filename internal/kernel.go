@@ -25,7 +25,7 @@ type Kernel struct {
 func (k *Kernel) Run() {
 
 	// Save configs
-	config.Add(config.Config{
+	config.Set(config.Config{
 		StorageDirectory: ".",
 		URL:              k.URL,
 	})
@@ -34,13 +34,22 @@ func (k *Kernel) Run() {
 	peerProtocol := protocols.GetPeerProtocol()
 	chainProtocol := protocols.GetChainProtocol()
 
-	// Check connection to peers
+	// Check if running for the first time
 	if _, err := os.Stat("initiate"); err != nil {
+
+		// Add new peers
 		for _, peer := range k.Peers {
 			peerProtocol.AddNewPeer(peer)
 		}
+
+		// Initiate chain
+		chainProtocol.Init()
+
+		// Marker
 		os.Create("initiate")
 	}
+
+	chainProtocol.UpdateChain()
 
 	// Init permanent jobs
 	permatent_tasks.Init()

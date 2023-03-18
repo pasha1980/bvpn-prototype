@@ -7,6 +7,7 @@ import (
 	"bvpn-prototype/internal/protocols/hasher"
 	"bvpn-prototype/internal/protocols/protocol_error"
 	"bvpn-prototype/internal/protocols/repo"
+	"bvpn-prototype/internal/protocols/signer"
 	"bvpn-prototype/internal/protocols/validators/block_validators"
 	"bvpn-prototype/internal/storage/chain"
 	"bvpn-prototype/internal/storage/mempool"
@@ -34,6 +35,10 @@ MempoolMethods:
 type ChainProtocol struct {
 	nodes []entity.Node
 	repo  repo.ChainStorageRepo
+}
+
+func (p *ChainProtocol) Init() {
+	signer.Init()
 }
 
 func (p *ChainProtocol) ValidateChain() error {

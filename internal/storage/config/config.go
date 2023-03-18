@@ -7,7 +7,7 @@ type Config struct {
 	URL              string
 }
 
-func Add(config Config) {
+func Set(config Config) {
 	c = &config
 }
 
