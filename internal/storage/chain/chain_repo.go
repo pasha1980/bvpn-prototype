@@ -89,6 +89,8 @@ func NewChainRepo() *ChainRepo {
 		log.Fatal(err)
 	}
 
+	db.AutoMigrate(&BlockModel{})
+
 	return &ChainRepo{
 		db: db,
 	}
