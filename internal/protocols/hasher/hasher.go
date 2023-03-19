@@ -5,6 +5,7 @@ import (
 	"bvpn-prototype/internal/protocols/entity/block_data"
 	"fmt"
 	"golang.org/x/crypto/sha3"
+	"sort"
 	"strconv"
 	"time"
 )
@@ -22,7 +23,12 @@ type BlockToEncrypt struct {
 
 func EncryptBlock(block entity.Block) []byte {
 	numStr := strconv.FormatUint(block.Number, 10)
+
+	sort.Slice(block.Data, func(i, j int) bool {
+		return block.Data[i].ID.ID() < block.Data[j].ID.ID()
+	})
 	dataStr := fmt.Sprintf("%v", block.Data)
+
 	timeStr := strconv.Itoa(int(block.TimeStamp.Unix()))
 	blockStr := numStr + block.PreviousHash + dataStr + timeStr
 	return EncryptString(blockStr)

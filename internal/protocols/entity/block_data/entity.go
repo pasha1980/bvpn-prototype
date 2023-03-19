@@ -3,11 +3,11 @@ package block_data
 import "github.com/google/uuid"
 
 type ChainStored struct {
-	ID     uuid.UUID        `json:"id"`
-	Type   StoredEntityType `json:"type"`
-	Sign   string           `json:"sign"`
-	PubKey string           `json:"pubKey"`
-	Data   any              `json:"data"`
+	ID     uuid.UUID
+	Type   StoredEntityType
+	Sign   string
+	PubKey string
+	Data   any
 }
 
 type StoredEntityType uint8

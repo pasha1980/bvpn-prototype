@@ -5,10 +5,10 @@ import (
 )
 
 type Traffic struct {
-	Node      string    `json:"node"`
-	Client    string    `json:"client"`
-	Gb        float64   `json:"gb"`
-	Timestamp time.Time `json:"timestamp"`
+	Node      string
+	Client    string
+	Gb        float64
+	Timestamp time.Time
 }
 
 const TypeTraffic StoredEntityType = 3
