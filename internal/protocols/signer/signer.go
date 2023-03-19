@@ -52,10 +52,11 @@ func Init() {
 	st.save()
 }
 
-func Validate(data block_data.ChainStored) bool {
+func Validate(data *block_data.ChainStored) bool {
 	pubKey := publickey.FromString(data.PubKey, curve.Secp256k1, true)
+	hash := hasher.EncryptString(fmt.Sprintf("%v", *data))
 	return ecdsa.Verify(
-		fmt.Sprintf("%v", data),
+		string(hash),
 		signature.FromBase64(data.Sign),
 		&pubKey,
 	)
@@ -63,7 +64,8 @@ func Validate(data block_data.ChainStored) bool {
 
 func Sign(data *block_data.ChainStored) {
 	st := storage()
-	data.Sign = ecdsa.Sign(fmt.Sprintf("%v", *data), &st.prv).ToBase64()
+	hash := hasher.EncryptString(fmt.Sprintf("%v", *data))
+	data.Sign = ecdsa.Sign(string(hash), &st.prv).ToBase64()
 	data.PubKey = st.pub.ToString(false)
 }
 
