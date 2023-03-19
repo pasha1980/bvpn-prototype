@@ -7,6 +7,7 @@ import (
 var blockValidationRules = []func(block entity.Block, previousBlock *entity.Block) error{
 	hashValidation,
 	timestampValidation,
+	signValidation,
 }
 
 func GetValidationRules() []func(block entity.Block, previousBlock *entity.Block) error {

@@ -15,23 +15,6 @@ import (
 	"time"
 )
 
-/*
-
-Chain methods:
-+ ValidateChain() error
-+ UpdateChain() error
-+ ReplaceChain(chain []Block) error
-
-BlockMethods:
-- CreateNewBlock()
-+ AddBlock(block Block)
-+ ValidateBlock(block Block)
-+ ValidateBlockData(data) error
-
-MempoolMethods:
-+ AddToMempool(data)
-*/
-
 type ChainProtocol struct {
 	nodes []entity.Node
 	repo  repo.ChainStorageRepo

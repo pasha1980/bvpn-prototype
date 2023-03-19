@@ -2,12 +2,15 @@ package signer
 
 import (
 	"bvpn-prototype/internal/logger"
+	"bvpn-prototype/internal/protocols/entity/block_data"
+	"bvpn-prototype/internal/protocols/hasher"
 	"bvpn-prototype/internal/storage/config"
+	"fmt"
 	"github.com/starkbank/ecdsa-go/v2/ellipticcurve/curve"
 	"github.com/starkbank/ecdsa-go/v2/ellipticcurve/ecdsa"
 	"github.com/starkbank/ecdsa-go/v2/ellipticcurve/privatekey"
 	"github.com/starkbank/ecdsa-go/v2/ellipticcurve/publickey"
-	"golang.org/x/crypto/sha3"
+	"github.com/starkbank/ecdsa-go/v2/ellipticcurve/signature"
 	"math/big"
 	"math/rand"
 	"os"
@@ -38,14 +41,8 @@ func storage() *s {
 
 	st.prv = privatekey.FromPem(string(file))
 	st.pub = st.prv.PublicKey()
-	st.addr = addrFromPub(st.pub.ToString(false))
+	st.addr = string(hasher.EncryptString(st.pub.ToString(false)))
 	return &st
-}
-
-func addrFromPub(i string) string {
-	hash := sha3.New256()
-	hash.Write([]byte(i))
-	return string(hash.Sum(nil))
 }
 
 func Init() {
@@ -55,16 +52,21 @@ func Init() {
 	st.save()
 }
 
-func Sign(msg []byte) string {
+func Validate(data block_data.ChainStored) bool {
+	pubKey := publickey.FromString(data.PubKey, curve.Secp256k1, true)
+	return ecdsa.Verify(
+		fmt.Sprintf("%v", data),
+		signature.FromBase64(data.Sign),
+		&pubKey,
+	)
+}
+
+func Sign(data *block_data.ChainStored) {
 	st := storage()
-	signature := ecdsa.Sign(string(msg), &st.prv)
-	return signature.ToBase64()
+	data.Sign = ecdsa.Sign(fmt.Sprintf("%v", *data), &st.prv).ToBase64()
+	data.PubKey = st.pub.ToString(false)
 }
 
 func GetAddr() string {
 	return storage().addr
-}
-
-func GetPubKey() string {
-	return storage().pub.ToString(false)
 }

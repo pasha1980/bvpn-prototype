@@ -3,9 +3,8 @@ package hasher
 import (
 	"bvpn-prototype/internal/protocols/entity"
 	"bvpn-prototype/internal/protocols/entity/block_data"
-	"crypto/sha256"
-	"encoding/base64"
-	"encoding/json"
+	"fmt"
+	"golang.org/x/crypto/sha3"
 	"strconv"
 	"time"
 )
@@ -15,27 +14,22 @@ import (
 */
 
 type BlockToEncrypt struct {
-	Number       uint64                   `json:"number"`
-	PreviousHash string                   `json:"previous_hash"`
-	Data         []block_data.ChainStored `json:"data"`
-	TimeStamp    time.Time                `json:"time_stamp"`
+	Number       uint64
+	PreviousHash string
+	Data         []block_data.ChainStored
+	TimeStamp    time.Time
 }
 
 func EncryptBlock(block entity.Block) []byte {
 	numStr := strconv.FormatUint(block.Number, 10)
-
-	dataJson, _ := json.Marshal(block.Data)
-	dataStr := base64.StdEncoding.EncodeToString(dataJson)
-
+	dataStr := fmt.Sprintf("%v", block.Data)
 	timeStr := strconv.Itoa(int(block.TimeStamp.Unix()))
-
 	blockStr := numStr + block.PreviousHash + dataStr + timeStr
-
-	return encryptRaw(blockStr)
+	return EncryptString(blockStr)
 }
 
-func encryptRaw(data string) []byte {
-	h := sha256.New()
-	h.Write([]byte(data))
-	return h.Sum(nil)
+func EncryptString(data string) []byte {
+	hash := sha3.New256()
+	hash.Write([]byte(data))
+	return hash.Sum(nil)
 }
