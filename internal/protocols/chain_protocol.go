@@ -11,17 +11,21 @@ import (
 	"bvpn-prototype/internal/protocols/validators/block_validators"
 	"bvpn-prototype/internal/storage/chain"
 	"bvpn-prototype/internal/storage/mempool"
+	"github.com/google/uuid"
 	"sort"
 	"time"
 )
 
 type ChainProtocol struct {
-	nodes []entity.Node
-	repo  repo.ChainStorageRepo
+	repo repo.ChainStorageRepo
 }
 
-func (p *ChainProtocol) Init() {
-	signer.Init()
+func (p *ChainProtocol) New(data block_data.ChainStored) block_data.ChainStored {
+	data.ID = uuid.New()
+	signer.Sign(&data)
+	mempool.AddNewElement(data)
+	http_out.BroadcastMempool(data, GetPeerProtocol().GetPeers())
+	return data
 }
 
 func (p *ChainProtocol) ValidateChain() error {
@@ -126,7 +130,7 @@ func (p *ChainProtocol) AddInitialBlock() error {
 		Data:         []block_data.ChainStored{},
 	}
 
-	initialBlock.Hash = string(hasher.EncryptBlock(initialBlock))
+	initialBlock.Hash = hasher.EncryptBlock(initialBlock)
 	err := p.AddBlock(initialBlock)
 	if err != nil {
 		return err

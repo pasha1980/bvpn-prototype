@@ -5,17 +5,14 @@ import (
 	"bvpn-prototype/internal/permatent_tasks"
 	"bvpn-prototype/internal/protocols"
 	"bvpn-prototype/internal/protocols/entity"
-	"bvpn-prototype/internal/storage/config"
+	"bvpn-prototype/internal/protocols/entity/block_data"
+	"bvpn-prototype/internal/protocols/signer"
 	"fmt"
 	"os"
 	"strconv"
 )
 
 type Kernel struct {
-	Address    string
-	PublicKey  []byte
-	PrivateKey []byte
-
 	URL      string
 	HttpPort uint64
 
@@ -23,13 +20,6 @@ type Kernel struct {
 }
 
 func (k *Kernel) Run() {
-
-	// Save configs
-	config.Set(config.Config{
-		StorageDirectory: ".",
-		URL:              k.URL,
-	})
-
 	// Init protocols
 	peerProtocol := protocols.GetPeerProtocol()
 	chainProtocol := protocols.GetChainProtocol()
@@ -42,14 +32,14 @@ func (k *Kernel) Run() {
 			peerProtocol.AddNewPeer(peer)
 		}
 
-		// Initiate chain
-		chainProtocol.Init()
+		// Initiate signer package
+		signer.Init()
 
 		// Marker
 		os.Create("initiate")
 	}
 
-	chainProtocol.UpdateChain()
+	go chainProtocol.UpdateChain()
 
 	// Init permanent jobs
 	permatent_tasks.Init()
@@ -64,4 +54,19 @@ func (k *Kernel) Run() {
 		fmt.Println("Failed to initiate http controller")
 		os.Exit(1)
 	}
+}
+
+func (k *Kernel) MakeTx(to string, amount float64) {
+	protocol := protocols.GetChainProtocol()
+
+	data := protocol.New(block_data.ChainStored{
+		Type: block_data.TypeTransaction,
+		Data: block_data.Transaction{
+			From:   signer.GetAddr(),
+			To:     to,
+			Amount: amount,
+		},
+	})
+
+	fmt.Println(data)
 }

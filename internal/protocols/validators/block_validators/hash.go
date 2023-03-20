@@ -8,7 +8,7 @@ import (
 
 func hashValidation(block entity.Block, previousBlock *entity.Block) error {
 	hash := hasher.EncryptBlock(block)
-	if string(hash) != block.Hash {
+	if hash != block.Hash {
 		return protocol_error.BlockValidationError("Invalid hash", block.Number)
 	}
 

@@ -5,70 +5,84 @@ import (
 	"bvpn-prototype/internal/protocols/entity/block_data"
 	"bvpn-prototype/internal/protocols/hasher"
 	"bvpn-prototype/internal/storage/config"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
-	"github.com/starkbank/ecdsa-go/v2/ellipticcurve/curve"
-	"github.com/starkbank/ecdsa-go/v2/ellipticcurve/ecdsa"
-	"github.com/starkbank/ecdsa-go/v2/ellipticcurve/privatekey"
-	"github.com/starkbank/ecdsa-go/v2/ellipticcurve/publickey"
-	"github.com/starkbank/ecdsa-go/v2/ellipticcurve/signature"
-	"math/big"
-	"math/rand"
+	"golang.org/x/crypto/sha3"
 	"os"
-	"time"
 )
 
 type s struct {
-	addr string
-	pub  publickey.PublicKey
-	prv  privatekey.PrivateKey
+	pub ecdsa.PublicKey
+	prv ecdsa.PrivateKey
 }
 
 func (st *s) save() {
 	dir := config.Get().StorageDirectory
-	err := os.WriteFile(dir+"/prv.pem", []byte(st.prv.ToPem()), 0600)
+	file, err := os.Create(dir + "/prv.pem")
 	if err != nil {
 		logger.LogError(err.Error())
 	}
+
+	encoded, _ := x509.MarshalECPrivateKey(&st.prv)
+	pem.Encode(file, &pem.Block{
+		Type:    "BVPN PRIVATE KEY",
+		Headers: nil,
+		Bytes:   encoded,
+	})
+
 }
 
 func storage() *s {
 	var st s
 	dir := config.Get().StorageDirectory
-	file, err := os.ReadFile(dir + "/prv.pem")
+	file, err := os.Open(dir + "/prv.pem")
 	if err != nil {
-		return &st
+		logger.LogError(err.Error())
 	}
-
-	st.prv = privatekey.FromPem(string(file))
-	st.pub = st.prv.PublicKey()
-	st.addr = string(hasher.EncryptString(st.pub.ToString(false)))
+	var data []byte
+	_, err = file.Read(data)
+	if err != nil {
+		logger.LogError(err.Error())
+	}
+	block, _ := pem.Decode(data)
+	encoded := block.Bytes
+	privateKey, _ := x509.ParseECPrivateKey(encoded)
+	st.prv = *privateKey
+	st.pub = st.prv.PublicKey
 	return &st
 }
 
 func Init() {
 	var st s
-	rand.Seed(time.Now().UnixNano())
-	st.prv = privatekey.New(curve.Secp256k1, big.NewInt(rand.Int63()))
+	prv, _ := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+	st.prv = *prv
 	st.save()
 }
 
 func Validate(data *block_data.ChainStored) bool {
-	pubKey := publickey.FromString(data.PubKey, curve.Secp256k1, true)
-	hash := hasher.EncryptString(fmt.Sprintf("%v", *data))
-	return ecdsa.Verify(
-		string(hash),
-		signature.FromBase64(data.Sign),
-		&pubKey,
-	)
+	decodedPub, _ := x509.ParsePKIXPublicKey([]byte(data.PubKey))
+	pub := decodedPub.(*ecdsa.PublicKey)
+	hash := []byte(hasher.EncryptString(fmt.Sprintf("%v", *data)))
+	return ecdsa.VerifyASN1(pub, hash[:], []byte(data.Sign))
 }
 
 func Sign(data *block_data.ChainStored) {
 	st := storage()
-	hash := hasher.EncryptString(fmt.Sprintf("%v", *data))
-	data.Sign = ecdsa.Sign(string(hash), &st.prv).ToBase64()
-	data.PubKey = st.pub.ToString(false)
+	hash := []byte(hasher.EncryptString(fmt.Sprintf("%v", *data)))
+	sign, _ := ecdsa.SignASN1(rand.Reader, &st.prv, hash)
+	data.Sign = fmt.Sprintf("%x", sign)
+	encodedPub, _ := x509.MarshalPKIXPublicKey(st.pub)
+	data.PubKey = string(encodedPub)
 }
 
 func GetAddr() string {
-	return storage().addr
+	st := storage()
+	buf, _ := x509.MarshalPKIXPublicKey(st.pub)
+	h := make([]byte, 32)
+	sha3.ShakeSum128(h, buf)
+	return fmt.Sprintf("%x", h)
 }

@@ -9,18 +9,18 @@ import (
 )
 
 type PeerRepo struct {
-	storage PeerStorage
+	storage peerStorage
 }
 
 func (r *PeerRepo) GetAll() []entity.Node {
 	r.updateData()
-	return r.storage.data
+	return r.storage.Data
 }
 
 func (r *PeerRepo) Save(peer entity.Node) {
 	r.updateData()
 	if !r.isExist(peer) {
-		r.storage.data = append(r.storage.data, peer)
+		r.storage.Data = append(r.storage.Data, peer)
 		r.storeData()
 	}
 }
@@ -28,11 +28,11 @@ func (r *PeerRepo) Save(peer entity.Node) {
 func (r *PeerRepo) Remove(peer entity.Node) {
 	r.updateData()
 	if r.isExist(peer) {
-		data := r.storage.data
-		r.storage.data = []entity.Node{}
+		data := r.storage.Data
+		r.storage.Data = []entity.Node{}
 		for _, existingPeer := range data {
 			if peer != existingPeer {
-				r.storage.data = append(r.storage.data, existingPeer)
+				r.storage.Data = append(r.storage.Data, existingPeer)
 			}
 		}
 		r.storeData()
@@ -41,7 +41,7 @@ func (r *PeerRepo) Remove(peer entity.Node) {
 
 func (r *PeerRepo) isExist(peer entity.Node) bool {
 	r.updateData()
-	for _, stored := range r.storage.data {
+	for _, stored := range r.storage.Data {
 		if stored == peer {
 			return true
 		}
@@ -51,7 +51,7 @@ func (r *PeerRepo) isExist(peer entity.Node) bool {
 }
 
 func (r *PeerRepo) updateData() {
-	base64Encoded, err := os.ReadFile(config.Get().StorageDirectory + "/peers.txt")
+	base64Encoded, err := os.ReadFile(config.Get().StorageDirectory + "/peers.bvpn")
 	if err != nil {
 		r.storeData()
 	}
@@ -70,7 +70,7 @@ func (r *PeerRepo) updateData() {
 func (r *PeerRepo) storeData() {
 	jsonEncoded, _ := json.Marshal(r.storage)
 	base64Encoded := base64.StdEncoding.EncodeToString(jsonEncoded)
-	err := os.WriteFile(config.Get().StorageDirectory+"/peers.txt", []byte(base64Encoded), 0666)
+	err := os.WriteFile(config.Get().StorageDirectory+"/peers.bvpn", []byte(base64Encoded), 0666)
 	if err != nil {
 		// todo: what to do
 	}
@@ -79,6 +79,5 @@ func (r *PeerRepo) storeData() {
 func NewPeerRepo() *PeerRepo {
 	repo := &PeerRepo{}
 	repo.updateData()
-	repo.storeData()
 	return repo
 }

@@ -2,21 +2,28 @@ package mempool
 
 import (
 	"bvpn-prototype/internal/protocols/entity/block_data"
+	"bvpn-prototype/internal/storage/config"
 	"bvpn-prototype/internal/utils"
+	"encoding/base64"
+	"encoding/json"
 	"github.com/google/uuid"
 	"math/rand"
+	"os"
 	"time"
 )
 
 func AddNewElement(element block_data.ChainStored) {
-	storage[element.ID.String()] = element
+	updateData()
+	defer storeData()
+	storage.Data[element.ID.String()] = element
 }
 
 func GetRandomElements(count int) []block_data.ChainStored {
+	updateData()
 	var result []block_data.ChainStored
 
-	if len(storage) < count {
-		for _, value := range storage {
+	if len(storage.Data) < count {
+		for _, value := range storage.Data {
 			result = append(result, value)
 		}
 	}
@@ -25,7 +32,7 @@ func GetRandomElements(count int) []block_data.ChainStored {
 	var i int
 
 	for {
-		element := randomElement(storage)
+		element := randomElement(storage.Data)
 		index := element.ID.String()
 		if utils.InStringSlice(index, usedIndexes) {
 			continue
@@ -44,12 +51,15 @@ func GetRandomElements(count int) []block_data.ChainStored {
 }
 
 func IsExist(uuid uuid.UUID) bool {
-	_, exist := storage[uuid.String()]
+	updateData()
+	_, exist := storage.Data[uuid.String()]
 	return exist
 }
 
 func RemoveByIndex(index uuid.UUID) {
-	delete(storage, index.String())
+	updateData()
+	defer storeData()
+	delete(storage.Data, index.String())
 }
 
 func randomElement(m map[string]block_data.ChainStored) block_data.ChainStored {
@@ -66,4 +76,33 @@ func randomElement(m map[string]block_data.ChainStored) block_data.ChainStored {
 	}
 
 	return e
+}
+
+func updateData() {
+	storage = &pool{
+		Data: make(map[string]block_data.ChainStored),
+	}
+	base64Encoded, err := os.ReadFile(config.Get().StorageDirectory + "/mempool.bvpn")
+	if err != nil {
+		storeData()
+	}
+
+	jsonEncoded, err := base64.StdEncoding.DecodeString(string(base64Encoded))
+	if err != nil {
+		storeData()
+	}
+
+	err = json.Unmarshal(jsonEncoded, &storage)
+	if err != nil {
+		storeData()
+	}
+}
+
+func storeData() {
+	jsonEncoded, _ := json.Marshal(storage)
+	base64Encoded := base64.StdEncoding.EncodeToString(jsonEncoded)
+	err := os.WriteFile(config.Get().StorageDirectory+"/mempool.bvpn", []byte(base64Encoded), 0666)
+	if err != nil {
+		// todo: what to do
+	}
 }

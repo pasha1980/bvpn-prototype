@@ -3,6 +3,7 @@ package main
 import (
 	"bvpn-prototype/internal"
 	"bvpn-prototype/internal/protocols/entity"
+	"bvpn-prototype/internal/storage/config"
 	"fmt"
 	"github.com/jessevdk/go-flags"
 	"gopkg.in/yaml.v3"
@@ -10,13 +11,15 @@ import (
 	"os"
 )
 
-const defaultConfigFile = "/etc/bvpn/config.yaml"
+const defaultConfigFile = "config.yaml"
 
 var configFile = defaultConfigFile
 
 func main() {
 	var opts struct {
-		ConfigFile string `short:"c" long:"configs" description:"Configuration file" required:"false"`
+		ConfigFile *string  `short:"c" long:"configs" description:"Configuration file" required:"false"`
+		To         *string  `short:"t" long:"to" description:"Receiver" required:"false"`
+		Amount     *float64 `short:"a" long:"amount" description:"amount" required:"false"`
 	}
 
 	commands, err := flags.Parse(&opts)
@@ -24,22 +27,45 @@ func main() {
 		log.Fatalln(err)
 	}
 	command := commands[0]
-	configFile = opts.ConfigFile
+
+	if opts.ConfigFile != nil {
+		configFile = *opts.ConfigFile
+	}
+	kernel, err := createKernel()
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	switch command {
 	case "run":
-		kernel, err := kernelFromConfigs()
-		if err != nil {
-			log.Fatalln(err)
-		}
-
 		kernel.Run()
+		break
+	case "make":
+		switch commands[1] {
+		case "transaction":
+		case "tx":
+
+			if opts.To == nil {
+				log.Fatalln("To whom?")
+			}
+
+			if opts.Amount == nil {
+				log.Fatalln("Should I send everything you have????")
+			}
+
+			kernel.MakeTx(
+				*opts.To,
+				*opts.Amount,
+			)
+			break
+		}
+		break
 	default:
 		fmt.Println("Hello") // todo
 	}
 }
 
-func kernelFromConfigs() (*internal.Kernel, error) {
+func createKernel() (*internal.Kernel, error) {
 	yamlFile, err := os.ReadFile(configFile)
 	if err != nil {
 		return nil, err
@@ -87,6 +113,11 @@ func kernelFromConfigs() (*internal.Kernel, error) {
 		HttpPort: cfg.Ports.Http,
 		Peers:    peers,
 	}
+
+	config.Set(config.Config{
+		StorageDirectory: ".",
+		URL:              cfg.HttpUrl,
+	})
 
 	return &kernel, nil
 }

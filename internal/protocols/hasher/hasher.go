@@ -11,7 +11,7 @@ import (
 )
 
 /*
- Hash Algorithm: SHA-256
+ Hash Algorithm: SHA-3-256
 */
 
 type BlockToEncrypt struct {
@@ -21,7 +21,7 @@ type BlockToEncrypt struct {
 	TimeStamp    time.Time
 }
 
-func EncryptBlock(block entity.Block) []byte {
+func EncryptBlock(block entity.Block) string {
 	numStr := strconv.FormatUint(block.Number, 10)
 
 	sort.Slice(block.Data, func(i, j int) bool {
@@ -34,8 +34,9 @@ func EncryptBlock(block entity.Block) []byte {
 	return EncryptString(blockStr)
 }
 
-func EncryptString(data string) []byte {
-	hash := sha3.New256()
-	hash.Write([]byte(data))
-	return hash.Sum(nil)
+func EncryptString(data string) string {
+	s := sha3.New256()
+	s.Write([]byte(data))
+	h := s.Sum(nil)
+	return fmt.Sprintf("%x", h)
 }

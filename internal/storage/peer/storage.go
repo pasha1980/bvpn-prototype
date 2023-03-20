@@ -2,6 +2,6 @@ package peer
 
 import "bvpn-prototype/internal/protocols/entity"
 
-type PeerStorage struct {
-	data []entity.Node
+type peerStorage struct {
+	Data []entity.Node
 }
