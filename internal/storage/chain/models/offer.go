@@ -6,12 +6,12 @@ import (
 )
 
 type Offer struct {
-	ID      uint `gorm:"PRIMARY_KEY"`
-	Ref     string
-	BlockID uint `gorm:"index"`
-	Sign    string
-	PubKey  string
-	//Node    string
+	ID        uint `gorm:"PRIMARY_KEY"`
+	Ref       string
+	BlockID   uint `gorm:"index"`
+	Sign      string
+	PubKey    string
+	URL       string
 	Price     float64
 	Timestamp int64
 }
@@ -28,7 +28,7 @@ func (o *Offer) ToChainStored() block_data.ChainStored {
 		Sign:   o.Sign,
 		PubKey: o.PubKey,
 		Data: block_data.Offer{
-			//Node:  o.Node,
+			URL:       o.URL,
 			Price:     o.Price,
 			Timestamp: o.Timestamp,
 		},
@@ -38,11 +38,11 @@ func (o *Offer) ToChainStored() block_data.ChainStored {
 func OfferToModel(data block_data.ChainStored, blockId uint) Offer {
 	offer := data.Data.(block_data.Offer)
 	return Offer{
-		Ref:     data.ID.String(),
-		BlockID: blockId,
-		Sign:    data.Sign,
-		PubKey:  data.PubKey,
-		//Node:    offer.Node,
+		Ref:       data.ID.String(),
+		BlockID:   blockId,
+		Sign:      data.Sign,
+		PubKey:    data.PubKey,
+		URL:       offer.URL,
 		Price:     offer.Price,
 		Timestamp: offer.Timestamp,
 	}

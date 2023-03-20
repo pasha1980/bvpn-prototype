@@ -5,6 +5,7 @@ import (
 	"bvpn-prototype/internal/http/http_dto/mempool_data_dto"
 	"bvpn-prototype/internal/http/http_errors"
 	"bvpn-prototype/internal/protocols"
+	"bvpn-prototype/internal/protocols/signer"
 	"errors"
 	"github.com/gofiber/fiber/v2"
 	"net/http"
@@ -140,6 +141,12 @@ func (c HttpController) AddPeer(ctx *fiber.Ctx) error {
 
 	return ctx.Status(http.StatusOK).JSON(map[string]bool{
 		"success": true,
+	})
+}
+
+func (c HttpController) GetAddress(ctx *fiber.Ctx) error {
+	return ctx.Status(http.StatusOK).JSON(map[string]string{
+		"address": signer.GetAddr(),
 	})
 }
 

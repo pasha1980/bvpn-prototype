@@ -8,6 +8,7 @@ var blockValidationRules = []func(block entity.Block, previousBlock *entity.Bloc
 	hashValidation,
 	timestampValidation,
 	signValidation,
+	offerValidation,
 }
 
 func GetValidationRules() []func(block entity.Block, previousBlock *entity.Block) error {

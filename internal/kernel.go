@@ -159,6 +159,7 @@ func (k *Kernel) MakeOffer(price float64) {
 	offer := protocol.New(block_data.ChainStored{
 		Type: block_data.TypeOffer,
 		Data: block_data.Offer{
+			URL:       k.URL,
 			Price:     price,
 			Timestamp: time.Now().Unix(),
 		},

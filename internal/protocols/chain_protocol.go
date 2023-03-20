@@ -9,8 +9,10 @@ import (
 	"bvpn-prototype/internal/protocols/repo"
 	"bvpn-prototype/internal/protocols/signer"
 	"bvpn-prototype/internal/protocols/validators/block_validators"
+	"bvpn-prototype/internal/protocols/validators/node_validators"
 	"bvpn-prototype/internal/storage/chain"
 	"bvpn-prototype/internal/storage/mempool"
+	"bvpn-prototype/internal/utils"
 	"github.com/google/uuid"
 	"sort"
 	"time"
@@ -159,6 +161,31 @@ func (p *ChainProtocol) ValidateBlock(block entity.Block, previousBlock *entity.
 }
 
 func (p *ChainProtocol) AddToMempool(element block_data.ChainStored) {
+
+	if element.Type == block_data.TypeOffer {
+		url := element.Data.(block_data.Offer).URL
+		node := entity.Node{
+			URL: url,
+			IP:  utils.GetIp(url),
+		}
+		rules := node_validators.GetValidationRules()
+		for _, rule := range rules {
+			err := rule(node)
+			if err != nil {
+				return
+			}
+		}
+
+		address, err := http_out.GetAddr(node)
+		if err != nil {
+			return
+		}
+
+		if address != hasher.EncryptString(element.PubKey) {
+			return
+		}
+	}
+
 	if !mempool.IsExist(element.ID) {
 		mempool.AddNewElement(element)
 
