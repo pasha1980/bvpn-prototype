@@ -45,16 +45,17 @@ func (k *Kernel) Run() {
 	// Init permanent jobs
 	permatent_tasks.Init()
 
-	// todo: silent and detached
-	// Init http controller
-	c := http_in.HttpController{
-		ChainProtocol: chainProtocol,
-		PeerProtocol:  peerProtocol,
-	}
-	err := http_in.InitHttp(c, ":"+strconv.FormatUint(k.HttpPort, 10), nil)
-	if err != nil {
-		// todo
-	}
+	go func() {
+		// Init http controller
+		c := http_in.HttpController{
+			ChainProtocol: chainProtocol,
+			PeerProtocol:  peerProtocol,
+		}
+		err := http_in.InitHttp(c, ":"+strconv.FormatUint(k.HttpPort, 10), nil)
+		if err != nil {
+			// todo
+		}
+	}()
 }
 
 func (k *Kernel) MakeTx(to string, amount float64) {

@@ -9,6 +9,8 @@ import (
 	"gopkg.in/yaml.v3"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 const defaultConfigFile = "config.yaml"
@@ -16,6 +18,9 @@ const defaultConfigFile = "config.yaml"
 var configFile = defaultConfigFile
 
 func main() {
+	ctlc := make(chan os.Signal)
+	signal.Notify(ctlc, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
+
 	var opts struct {
 		ConfigFile *string  `short:"c" long:"configs" description:"Configuration file" required:"false"`
 		To         *string  `short:"t" long:"to" description:"Receiver" required:"false"`
@@ -39,6 +44,7 @@ func main() {
 	switch command {
 	case "run":
 		kernel.Run()
+		<-ctlc
 		break
 	case "make":
 		switch commands[1] {

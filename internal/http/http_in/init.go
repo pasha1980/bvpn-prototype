@@ -11,8 +11,9 @@ type TLSConfig struct {
 
 func InitHttp(controller HttpController, addr string, tlsConfig *TLSConfig) error {
 	app := fiber.New(fiber.Config{
-		AppName:      "BVPN Prototype",
-		ErrorHandler: errorHandler,
+		AppName:               "BVPN Prototype",
+		ErrorHandler:          errorHandler,
+		DisableStartupMessage: true,
 	})
 
 	app.Post("/:method", controller.HttpEntrypoint)
