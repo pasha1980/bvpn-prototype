@@ -9,6 +9,7 @@ import (
 	"bvpn-prototype/internal/protocols/signer"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 )
 
@@ -44,6 +45,7 @@ func (k *Kernel) Run() {
 	// Init permanent jobs
 	permatent_tasks.Init()
 
+	// todo: silent and detached
 	// Init http controller
 	c := http_in.HttpController{
 		ChainProtocol: chainProtocol,
@@ -51,22 +53,101 @@ func (k *Kernel) Run() {
 	}
 	err := http_in.InitHttp(c, ":"+strconv.FormatUint(k.HttpPort, 10), nil)
 	if err != nil {
-		fmt.Println("Failed to initiate http controller")
-		os.Exit(1)
+		// todo
 	}
 }
 
 func (k *Kernel) MakeTx(to string, amount float64) {
 	protocol := protocols.GetChainProtocol()
 
-	data := protocol.New(block_data.ChainStored{
-		Type: block_data.TypeTransaction,
-		Data: block_data.Transaction{
-			From:   signer.GetAddr(),
-			To:     to,
-			Amount: amount,
-		},
+	utxos, err := protocol.GetUTXOs()
+	if err != nil {
+		// todo
+		return
+	}
+
+	var current float64
+	for _, utxo := range utxos {
+		current += utxo.Data.(block_data.Transaction).Amount
+	}
+
+	if amount > current {
+		// todo
+		return
+	}
+
+	sort.Slice(utxos, func(i int, j int) bool {
+		return utxos[i].Data.(block_data.Transaction).Amount > utxos[j].Data.(block_data.Transaction).Amount
 	})
 
-	fmt.Println(data)
+	var validForTx []block_data.ChainStored
+	var sum float64
+	for _, utxo := range utxos {
+		if utxo.Data.(block_data.Transaction).Amount >= amount {
+			tx := protocol.New(block_data.ChainStored{
+				Type: block_data.TypeTransaction,
+				Data: block_data.Transaction{
+					From:   utxo.ID.String(),
+					To:     to,
+					Amount: amount,
+				},
+			})
+			fmt.Println(tx)
+
+			if utxo.Data.(block_data.Transaction).Amount != amount {
+				toMe := protocol.New(block_data.ChainStored{
+					Type: block_data.TypeTransaction,
+					Data: block_data.Transaction{
+						From:   utxo.ID.String(),
+						To:     signer.GetAddr(),
+						Amount: utxo.Data.(block_data.Transaction).Amount - amount,
+					},
+				})
+				fmt.Println(toMe)
+			}
+			break
+		}
+
+		sum += utxo.Data.(block_data.Transaction).Amount
+		validForTx = append(validForTx, utxo)
+		if sum > amount {
+			break
+		}
+	}
+
+	for _, utxo := range validForTx {
+		utxoAmount := utxo.Data.(block_data.Transaction).Amount
+		if sum > utxoAmount {
+			tx := protocol.New(block_data.ChainStored{
+				Type: block_data.TypeTransaction,
+				Data: block_data.Transaction{
+					From:   utxo.ID.String(),
+					To:     to,
+					Amount: utxoAmount,
+				},
+			})
+			fmt.Println(tx)
+		} else {
+			tx := protocol.New(block_data.ChainStored{
+				Type: block_data.TypeTransaction,
+				Data: block_data.Transaction{
+					From:   utxo.ID.String(),
+					To:     to,
+					Amount: sum,
+				},
+			})
+			fmt.Println(tx)
+
+			toMe := protocol.New(block_data.ChainStored{
+				Type: block_data.TypeTransaction,
+				Data: block_data.Transaction{
+					From:   utxo.ID.String(),
+					To:     signer.GetAddr(),
+					Amount: utxoAmount - sum,
+				},
+			})
+			fmt.Println(toMe)
+		}
+		sum -= utxoAmount
+	}
 }

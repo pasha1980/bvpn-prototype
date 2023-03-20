@@ -28,6 +28,15 @@ func (p *ChainProtocol) New(data block_data.ChainStored) block_data.ChainStored 
 	return data
 }
 
+func (p *ChainProtocol) GetUTXOs() ([]block_data.ChainStored, error) {
+	utxos, err := p.repo.GetMyUTXOs()
+	if err != nil {
+		return nil, protocol_error.LogInternalError(err.Error())
+	}
+
+	return utxos, nil
+}
+
 func (p *ChainProtocol) ValidateChain() error {
 	block, err := p.repo.GetLastBlock()
 	if err != nil {

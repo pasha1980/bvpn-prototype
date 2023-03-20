@@ -2,6 +2,7 @@ package repo
 
 import (
 	"bvpn-prototype/internal/protocols/entity"
+	"bvpn-prototype/internal/protocols/entity/block_data"
 )
 
 type ChainStorageRepo interface {
@@ -12,4 +13,6 @@ type ChainStorageRepo interface {
 	GetChain(limit int, offset int) ([]entity.Block, error)
 
 	ReplaceChain(chain []entity.Block) error
+
+	GetMyUTXOs() ([]block_data.ChainStored, error)
 }

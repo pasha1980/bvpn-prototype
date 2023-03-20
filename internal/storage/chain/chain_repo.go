@@ -3,6 +3,7 @@ package chain
 import (
 	"bvpn-prototype/internal/protocols/entity"
 	"bvpn-prototype/internal/protocols/entity/block_data"
+	"bvpn-prototype/internal/protocols/signer"
 	"bvpn-prototype/internal/storage/chain/models"
 	"bvpn-prototype/internal/storage/config"
 	"errors"
@@ -228,6 +229,24 @@ func (r *ChainRepo) ReplaceChain(chain []entity.Block) error {
 	}
 
 	return tx.Error
+}
+
+func (r *ChainRepo) GetMyUTXOs() ([]block_data.ChainStored, error) {
+	var utxos []block_data.ChainStored
+	var utxoModels []models.Transaction
+
+	myAddr := signer.GetAddr()
+	sub := r.db.Select("o. from").Table("tx").Where("o.to = ?", myAddr)
+	err := r.db.Where(models.Transaction{To: myAddr}).Where("ref not in (?)", sub).Find(&utxoModels).Error
+	if err != nil {
+		return nil, err
+	}
+
+	for _, model := range utxoModels {
+		utxos = append(utxos, model.ToChainStored())
+	}
+
+	return utxos, nil
 }
 
 func NewChainRepo() *ChainRepo {
