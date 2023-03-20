@@ -11,6 +11,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"time"
 )
 
 type Kernel struct {
@@ -93,7 +94,7 @@ func (k *Kernel) MakeTx(to string, amount float64) {
 					Amount: amount,
 				},
 			})
-			fmt.Println(tx)
+			fmt.Println(tx) // todo
 
 			if utxo.Data.(block_data.Transaction).Amount != amount {
 				toMe := protocol.New(block_data.ChainStored{
@@ -104,7 +105,7 @@ func (k *Kernel) MakeTx(to string, amount float64) {
 						Amount: utxo.Data.(block_data.Transaction).Amount - amount,
 					},
 				})
-				fmt.Println(toMe)
+				fmt.Println(toMe) // todo
 			}
 			break
 		}
@@ -127,7 +128,7 @@ func (k *Kernel) MakeTx(to string, amount float64) {
 					Amount: utxoAmount,
 				},
 			})
-			fmt.Println(tx)
+			fmt.Println(tx) // todo
 		} else {
 			tx := protocol.New(block_data.ChainStored{
 				Type: block_data.TypeTransaction,
@@ -137,7 +138,7 @@ func (k *Kernel) MakeTx(to string, amount float64) {
 					Amount: sum,
 				},
 			})
-			fmt.Println(tx)
+			fmt.Println(tx) // todo
 
 			toMe := protocol.New(block_data.ChainStored{
 				Type: block_data.TypeTransaction,
@@ -147,8 +148,21 @@ func (k *Kernel) MakeTx(to string, amount float64) {
 					Amount: utxoAmount - sum,
 				},
 			})
-			fmt.Println(toMe)
+			fmt.Println(toMe) // todo
 		}
 		sum -= utxoAmount
 	}
+}
+
+func (k *Kernel) MakeOffer(price float64) {
+	protocol := protocols.GetChainProtocol()
+	offer := protocol.New(block_data.ChainStored{
+		Type: block_data.TypeOffer,
+		Data: block_data.Offer{
+			Price:     price,
+			Timestamp: time.Now().Unix(),
+		},
+	})
+
+	fmt.Println(fmt.Sprintf("%+v\n", offer))
 }

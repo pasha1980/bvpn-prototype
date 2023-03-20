@@ -11,8 +11,9 @@ type Offer struct {
 	BlockID uint `gorm:"index"`
 	Sign    string
 	PubKey  string
-	Node    string
-	Price   float64
+	//Node    string
+	Price     float64
+	Timestamp int64
 }
 
 func (o Offer) TableName() string {
@@ -27,8 +28,9 @@ func (o *Offer) ToChainStored() block_data.ChainStored {
 		Sign:   o.Sign,
 		PubKey: o.PubKey,
 		Data: block_data.Offer{
-			Node:  o.Node,
-			Price: o.Price,
+			//Node:  o.Node,
+			Price:     o.Price,
+			Timestamp: o.Timestamp,
 		},
 	}
 }
@@ -40,7 +42,8 @@ func OfferToModel(data block_data.ChainStored, blockId uint) Offer {
 		BlockID: blockId,
 		Sign:    data.Sign,
 		PubKey:  data.PubKey,
-		Node:    offer.Node,
-		Price:   offer.Price,
+		//Node:    offer.Node,
+		Price:     offer.Price,
+		Timestamp: offer.Timestamp,
 	}
 }

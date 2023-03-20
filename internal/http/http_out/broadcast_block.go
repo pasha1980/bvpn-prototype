@@ -21,8 +21,10 @@ func BroadcastBlock(block entity.Block, nodes []entity.Node) { // todo: In metho
 		req.SetRequestURI(node.URL + method)
 		res := fasthttp.AcquireResponse()
 		if err := fasthttp.Do(req, res); err != nil {
-			time.Sleep(time.Minute)
-			BroadcastBlock(block, []entity.Node{node})
+			go func() {
+				time.Sleep(time.Minute)
+				BroadcastBlock(block, []entity.Node{node})
+			}()
 		}
 
 		fasthttp.ReleaseRequest(req)

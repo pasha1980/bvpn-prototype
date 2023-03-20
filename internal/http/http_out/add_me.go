@@ -21,8 +21,10 @@ func AddMeTo(nodes []entity.Node) {
 		req.SetRequestURI(node.URL + method)
 		res := fasthttp.AcquireResponse()
 		if err := fasthttp.Do(req, res); err != nil {
-			time.Sleep(time.Minute)
-			AddMeTo([]entity.Node{node})
+			go func() {
+				time.Sleep(time.Minute)
+				AddMeTo([]entity.Node{node})
+			}()
 		}
 
 		fasthttp.ReleaseRequest(req)

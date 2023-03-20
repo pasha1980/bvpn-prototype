@@ -24,7 +24,8 @@ func main() {
 	var opts struct {
 		ConfigFile *string  `short:"c" long:"configs" description:"Configuration file" required:"false"`
 		To         *string  `short:"t" long:"to" description:"Receiver" required:"false"`
-		Amount     *float64 `short:"a" long:"amount" description:"amount" required:"false"`
+		Amount     *float64 `short:"a" long:"amount" description:"Amount" required:"false"`
+		Price      *float64 `short:"p" long:"price" description:"Price" required:"false"`
 	}
 
 	commands, err := flags.Parse(&opts)
@@ -64,11 +65,21 @@ func main() {
 				*opts.Amount,
 			)
 			break
+		case "offer":
+			if opts.Price == nil {
+				log.Fatalln("I'll sell you to devil, if you will not tell me the price!")
+			}
+
+			kernel.MakeOffer(*opts.Price)
+
+			break
 		}
 		break
 	default:
 		fmt.Println("Hello") // todo
 	}
+
+	close(ctlc)
 }
 
 func createKernel() (*internal.Kernel, error) {
@@ -78,12 +89,6 @@ func createKernel() (*internal.Kernel, error) {
 	}
 
 	var cfg struct {
-		//Price struct {
-		//	Gb   *float64 `yaml:"gb"`
-		//	Mb   *float64 `yaml:"mb"`
-		//	Kb   *float64 `yaml:"kb"`
-		//	Bvpn float64  `yaml:"bvpn"`
-		//} `yaml:"price"`
 		HttpUrl string `yaml:"http_url"`
 		Ports   struct {
 			//Vpn  uint64 `yaml:"vpn"`

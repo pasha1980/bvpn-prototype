@@ -39,12 +39,7 @@ func (st *s) save() {
 func storage() *s {
 	var st s
 	dir := config.Get().StorageDirectory
-	file, err := os.Open(dir + "/prv.pem")
-	if err != nil {
-		logger.LogError(err.Error())
-	}
-	var data []byte
-	_, err = file.Read(data)
+	data, err := os.ReadFile(dir + "/prv.pem")
 	if err != nil {
 		logger.LogError(err.Error())
 	}
@@ -75,13 +70,13 @@ func Sign(data *block_data.ChainStored) {
 	hash := []byte(hasher.EncryptString(fmt.Sprintf("%v", *data)))
 	sign, _ := ecdsa.SignASN1(rand.Reader, &st.prv, hash)
 	data.Sign = fmt.Sprintf("%x", sign)
-	encodedPub, _ := x509.MarshalPKIXPublicKey(st.pub)
-	data.PubKey = string(encodedPub)
+	encodedPub, _ := x509.MarshalPKIXPublicKey(&st.pub)
+	data.PubKey = fmt.Sprintf("%x", encodedPub)
 }
 
 func GetAddr() string {
 	st := storage()
-	buf, _ := x509.MarshalPKIXPublicKey(st.pub)
+	buf, _ := x509.MarshalPKIXPublicKey(&st.pub)
 	h := make([]byte, 32)
 	sha3.ShakeSum128(h, buf)
 	return fmt.Sprintf("%x", h)
