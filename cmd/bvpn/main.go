@@ -89,11 +89,8 @@ func createKernel() (*internal.Kernel, error) {
 	}
 
 	var cfg struct {
-		HttpUrl string `yaml:"http_url"`
-		Ports   struct {
-			//Vpn  uint64 `yaml:"vpn"`
-			Http uint64 `yaml:"http"`
-		} `yaml:"ports"`
+		Url   string `yaml:"url"`
+		Port  uint64 `yaml:"port"`
 		Peers []struct {
 			Ip string `yaml:"ip"`
 			//VpnUrl  string  `yaml:"vpn_url"`
@@ -115,19 +112,19 @@ func createKernel() (*internal.Kernel, error) {
 		})
 	}
 
-	if cfg.Ports.Http == 0 {
-		cfg.Ports.Http = 80
+	if cfg.Port == 0 {
+		cfg.Port = 80
 	}
 
 	kernel := internal.Kernel{
-		URL:      cfg.HttpUrl,
-		HttpPort: cfg.Ports.Http,
+		URL:      cfg.Url,
+		HttpPort: cfg.Port,
 		Peers:    peers,
 	}
 
 	config.Set(config.Config{
 		StorageDirectory: ".",
-		URL:              cfg.HttpUrl,
+		URL:              cfg.Url,
 	})
 
 	return &kernel, nil
