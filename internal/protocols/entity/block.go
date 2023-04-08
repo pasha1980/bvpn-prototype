@@ -14,6 +14,8 @@ type Block struct {
 	PreviousHash string
 	Data         []block_data.ChainStored
 	TimeStamp    time.Time
+	CreatedBy    string
+	Next         string
 }
 
 func (b *Block) IsInitial() bool {

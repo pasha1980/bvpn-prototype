@@ -12,6 +12,8 @@ type BlockDto struct {
 	PreviousHash string                   `json:"previousHash"`
 	Data         []block_data.ChainStored `json:"data"`
 	TimeStamp    time.Time                `json:"timeStamp"`
+	Next         string                   `json:"next"`
+	CreatedBy    string                   `json:"createdByy"`
 }
 
 func (d *BlockDto) ToEntity() entity.Block {
@@ -57,6 +59,8 @@ func (d *BlockDto) ToEntity() entity.Block {
 		PreviousHash: d.PreviousHash,
 		Data:         data,
 		TimeStamp:    d.TimeStamp,
+		Next:         d.Next,
+		CreatedBy:    d.CreatedBy,
 	}
 }
 
@@ -67,5 +71,7 @@ func BlockToDto(block entity.Block) BlockDto {
 		PreviousHash: block.PreviousHash,
 		Data:         block.Data,
 		TimeStamp:    block.TimeStamp,
+		Next:         block.Next,
+		CreatedBy:    block.CreatedBy,
 	}
 }

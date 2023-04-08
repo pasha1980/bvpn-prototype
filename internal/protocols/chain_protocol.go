@@ -128,6 +128,14 @@ func (p *ChainProtocol) AddBlock(block entity.Block) error {
 		return protocol_error.LogInternalError(err.Error())
 	}
 
+	for _, datum := range block.Data {
+		mempool.RemoveByIndex(datum.ID)
+	}
+
+	if block.Next == signer.GetAddr() {
+		go p.CreateNewBlock()
+	}
+
 	return nil
 }
 
@@ -200,6 +208,43 @@ func (p *ChainProtocol) GetChain(limit int, offset int) ([]entity.Block, error) 
 	}
 
 	return c, nil
+}
+
+func (p *ChainProtocol) CreateNewBlock() error {
+	lastBlock, err := p.repo.GetLastBlock()
+	if err != nil {
+		return protocol_error.LogInternalError(err.Error())
+	}
+
+	nextTimeStamp := lastBlock.TimeStamp.Add(10 * time.Second)
+	time.Sleep(nextTimeStamp.Sub(time.Now()))
+
+	next := p.WhoIsNext()
+	data := mempool.GetElements(1048576)
+
+	newBlock := entity.Block{
+		Number:       lastBlock.Number + 1,
+		PreviousHash: lastBlock.PreviousHash,
+		Data:         data,
+		TimeStamp:    time.Now(),
+		CreatedBy:    signer.GetAddr(),
+		Next:         next,
+	}
+	newBlock.Hash = hasher.EncryptBlock(newBlock)
+	if err = p.AddBlock(newBlock); err != nil {
+		return err
+	}
+
+	for _, datum := range data {
+		mempool.RemoveByIndex(datum.ID)
+	}
+
+	return nil
+}
+
+func (p *ChainProtocol) WhoIsNext() string {
+	// todo
+	return ""
 }
 
 func (p *ChainProtocol) validateGivenChain(chain []entity.Block) error {

@@ -10,6 +10,8 @@ type Block struct {
 	Hash         string `gorm:"index"`
 	PreviousHash string `gorm:"index"`
 	Timestamp    time.Time
+	CreatedBy    string `gorm:"index"`
+	Next         string
 }
 
 func (b Block) TableName() string {
@@ -22,6 +24,8 @@ func (b *Block) ModelToEntity() *entity.Block {
 		Hash:         b.Hash,
 		PreviousHash: b.PreviousHash,
 		TimeStamp:    b.Timestamp,
+		Next:         b.Next,
+		CreatedBy:    b.CreatedBy,
 	}
 
 	return &e
@@ -32,6 +36,8 @@ func BlockToModel(block entity.Block) *Block {
 		Hash:         block.Hash,
 		PreviousHash: block.PreviousHash,
 		Timestamp:    block.TimeStamp,
+		Next:         block.Next,
+		CreatedBy:    block.CreatedBy,
 	}
 
 	if block.Number != 0 {

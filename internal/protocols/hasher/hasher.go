@@ -30,7 +30,7 @@ func EncryptBlock(block entity.Block) string {
 	dataStr := fmt.Sprintf("%v", block.Data)
 
 	timeStr := strconv.Itoa(int(block.TimeStamp.Unix()))
-	blockStr := numStr + block.PreviousHash + dataStr + timeStr
+	blockStr := numStr + block.PreviousHash + dataStr + timeStr + block.CreatedBy + block.Next
 	return EncryptString(blockStr)
 }
 

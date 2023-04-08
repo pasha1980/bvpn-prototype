@@ -18,11 +18,11 @@ func AddNewElement(element block_data.ChainStored) {
 	storage.Data[element.ID.String()] = element
 }
 
-func GetRandomElements(count int) []block_data.ChainStored {
+func GetElements(size int) []block_data.ChainStored {
 	updateData()
 	var result []block_data.ChainStored
 
-	if len(storage.Data) < count {
+	if utils.SizeOf(storage.Data) < size {
 		for _, value := range storage.Data {
 			result = append(result, value)
 		}
@@ -31,6 +31,7 @@ func GetRandomElements(count int) []block_data.ChainStored {
 	var usedIndexes []string
 	var i int
 
+	var temp []block_data.ChainStored
 	for {
 		element := randomElement(storage.Data)
 		index := element.ID.String()
@@ -38,13 +39,15 @@ func GetRandomElements(count int) []block_data.ChainStored {
 			continue
 		}
 
-		usedIndexes = append(usedIndexes, index)
-		result = append(result, element)
+		temp = append(temp, element)
 
-		i++
-		if i == count {
+		i = utils.SizeOf(temp)
+		if i > size {
 			break
 		}
+
+		usedIndexes = append(usedIndexes, index)
+		result = append(result, element)
 	}
 
 	return result
