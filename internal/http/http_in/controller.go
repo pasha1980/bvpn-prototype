@@ -70,7 +70,7 @@ func (c HttpController) AddTraffic(ctx *fiber.Ctx) error {
 }
 
 func (c HttpController) AddNodeStatus(ctx *fiber.Ctx) error {
-	var nodeStatus mempool_data_dto.NodeStatus
+	var nodeStatus mempool_data_dto.ConnectionBreak
 
 	err := ctx.BodyParser(&nodeStatus)
 	if err != nil {

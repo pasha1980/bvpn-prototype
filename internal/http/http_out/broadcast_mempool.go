@@ -21,12 +21,12 @@ func BroadcastMempool(stored block_data.ChainStored, nodes []entity.Node) {
 	case block_data.TypeOffer:
 		requestDto = mempool_data_dto.OfferToDto(stored)
 		method = "/addOffer"
-	case block_data.TypeNodeStatus:
+	case block_data.TypeTraffic:
 		requestDto = mempool_data_dto.NodeStatusToDto(stored)
 		method = "/addTraffic"
-	case block_data.TypeTraffic:
+	case block_data.TypeConnectionBreak:
 		requestDto = mempool_data_dto.TrafficToDto(stored)
-		method = "/addNodeStatus"
+		method = "/addConnectionBreak"
 	}
 
 	for _, node := range nodes {

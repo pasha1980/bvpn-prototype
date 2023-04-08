@@ -147,6 +147,8 @@ func (p *ChainProtocol) AddInitialBlock() error {
 		PreviousHash: entity.InitialBlockPrevHash,
 		TimeStamp:    timestamp,
 		Data:         []block_data.ChainStored{},
+		CreatedBy:    "0",
+		Next:         "0",
 	}
 
 	initialBlock.Hash = hasher.EncryptBlock(initialBlock)
@@ -243,7 +245,7 @@ func (p *ChainProtocol) CreateNewBlock() error {
 }
 
 func (p *ChainProtocol) WhoIsNext() string {
-	// todo
+
 	return ""
 }
 

@@ -43,8 +43,8 @@ func (r *ChainRepo) getData(block *entity.Block) error {
 		data = append(data, offer.ToChainStored())
 	}
 
-	var statuses []models.NodeStatus
-	err = r.db.Where(&models.NodeStatus{
+	var statuses []models.ConnectionBreak
+	err = r.db.Where(&models.ConnectionBreak{
 		BlockID: uint(block.Number),
 	}).Find(&statuses).Error
 	if err != nil {
@@ -90,7 +90,7 @@ func (r *ChainRepo) saveData(block *entity.Block) error {
 				return err
 			}
 			break
-		case block_data.TypeNodeStatus:
+		case block_data.TypeConnectionBreak:
 			model := models.NodeStatusToModel(data, uint(block.Number))
 			err := r.db.Save(model).Error
 			if err != nil {
@@ -216,7 +216,7 @@ func (r *ChainRepo) ReplaceChain(chain []entity.Block) error {
 			case block_data.TypeOffer:
 				tx.Save(models.OfferToModel(data, uint(block.Number)))
 				break
-			case block_data.TypeNodeStatus:
+			case block_data.TypeConnectionBreak:
 				tx.Save(models.NodeStatusToModel(data, uint(block.Number)))
 				break
 			case block_data.TypeTraffic:
@@ -261,7 +261,7 @@ func NewChainRepo() *ChainRepo {
 	db.AutoMigrate(&models.Block{})
 	db.AutoMigrate(&models.Transaction{})
 	db.AutoMigrate(&models.Traffic{})
-	db.AutoMigrate(&models.NodeStatus{})
+	db.AutoMigrate(&models.ConnectionBreak{})
 	db.AutoMigrate(&models.Offer{})
 
 	return &ChainRepo{

@@ -34,11 +34,11 @@ func (d *BlockDto) ToEntity() entity.Block {
 				Data: dto.Data.(block_data.Offer),
 			})
 			break
-		case block_data.TypeNodeStatus:
+		case block_data.TypeConnectionBreak:
 			data = append(data, block_data.ChainStored{
 				ID:   dto.ID,
 				Type: dto.Type,
-				Data: dto.Data.(block_data.NodeStatus),
+				Data: dto.Data.(block_data.ConnectionBreak),
 			})
 			break
 		case block_data.TypeTraffic:
