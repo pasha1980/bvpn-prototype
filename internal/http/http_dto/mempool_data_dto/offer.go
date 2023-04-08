@@ -3,6 +3,7 @@ package mempool_data_dto
 import (
 	"bvpn-prototype/internal/protocols/entity/block_data"
 	"github.com/google/uuid"
+	"time"
 )
 
 type Offer struct {
@@ -23,7 +24,7 @@ func (o *Offer) ToEntity() block_data.ChainStored {
 		Data: block_data.Offer{
 			URL:       o.URL,
 			Price:     o.Price,
-			Timestamp: o.Timestamp,
+			Timestamp: time.Unix(o.Timestamp, 0),
 		},
 	}
 }
@@ -36,6 +37,6 @@ func OfferToDto(entity block_data.ChainStored) Offer {
 		PubKey:    entity.PubKey,
 		URL:       offer.URL,
 		Price:     offer.Price,
-		Timestamp: offer.Timestamp,
+		Timestamp: offer.Timestamp.Unix(),
 	}
 }

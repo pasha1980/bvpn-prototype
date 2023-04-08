@@ -13,7 +13,7 @@ type Traffic struct {
 	Node      string    `json:"node" xml:"node" form:"node" query:"node"`
 	Client    string    `json:"client" xml:"client" form:"client" query:"client"`
 	Gb        float64   `json:"gb" xml:"gb" form:"gb" query:"gb"`
-	Timestamp time.Time `json:"timestamp" xml:"timestamp" form:"timestamp" query:"timestamp"`
+	Timestamp int64     `json:"timestamp" xml:"timestamp" form:"timestamp" query:"timestamp"`
 }
 
 func (t *Traffic) ToEntity() block_data.ChainStored {
@@ -26,7 +26,7 @@ func (t *Traffic) ToEntity() block_data.ChainStored {
 			Node:      t.Node,
 			Client:    t.Client,
 			Gb:        t.Gb,
-			Timestamp: t.Timestamp,
+			Timestamp: time.Unix(t.Timestamp, 0),
 		},
 	}
 }
@@ -40,6 +40,6 @@ func TrafficToDto(entity block_data.ChainStored) Traffic {
 		Node:      traffic.Node,
 		Client:    traffic.Client,
 		Gb:        traffic.Gb,
-		Timestamp: traffic.Timestamp,
+		Timestamp: traffic.Timestamp.Unix(),
 	}
 }

@@ -1,8 +1,10 @@
 package block_data
 
+import "time"
+
 type Offer struct {
 	URL       string
-	Timestamp int64
+	Timestamp time.Time
 	Price     float64
 }
 

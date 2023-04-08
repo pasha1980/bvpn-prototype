@@ -15,7 +15,7 @@ type Traffic struct {
 	Node      string
 	Client    string
 	Gb        float64
-	Timestamp time.Time
+	Timestamp int64
 }
 
 func (t Traffic) TableName() string {
@@ -33,7 +33,7 @@ func (t *Traffic) ToChainStored() block_data.ChainStored {
 			Node:      t.Node,
 			Client:    t.Client,
 			Gb:        t.Gb,
-			Timestamp: t.Timestamp,
+			Timestamp: time.Unix(t.Timestamp, 0),
 		},
 	}
 }
@@ -48,6 +48,6 @@ func TrafficToModel(data block_data.ChainStored, blockId uint) Traffic {
 		Node:      traffic.Node,
 		Client:    traffic.Client,
 		Gb:        traffic.Gb,
-		Timestamp: traffic.Timestamp,
+		Timestamp: traffic.Timestamp.Unix(),
 	}
 }

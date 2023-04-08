@@ -3,6 +3,7 @@ package models
 import (
 	"bvpn-prototype/internal/protocols/entity/block_data"
 	"github.com/google/uuid"
+	"time"
 )
 
 type Offer struct {
@@ -30,7 +31,7 @@ func (o *Offer) ToChainStored() block_data.ChainStored {
 		Data: block_data.Offer{
 			URL:       o.URL,
 			Price:     o.Price,
-			Timestamp: o.Timestamp,
+			Timestamp: time.Unix(o.Timestamp, 0),
 		},
 	}
 }
@@ -44,6 +45,6 @@ func OfferToModel(data block_data.ChainStored, blockId uint) Offer {
 		PubKey:    data.PubKey,
 		URL:       offer.URL,
 		Price:     offer.Price,
-		Timestamp: offer.Timestamp,
+		Timestamp: offer.Timestamp.Unix(),
 	}
 }
