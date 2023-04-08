@@ -69,15 +69,15 @@ func (c HttpController) AddTraffic(ctx *fiber.Ctx) error {
 	})
 }
 
-func (c HttpController) AddNodeStatus(ctx *fiber.Ctx) error {
-	var nodeStatus mempool_data_dto.ConnectionBreak
+func (c HttpController) AddConnectionBreak(ctx *fiber.Ctx) error {
+	var connectionBreak mempool_data_dto.ConnectionBreak
 
-	err := ctx.BodyParser(&nodeStatus)
+	err := ctx.BodyParser(&connectionBreak)
 	if err != nil {
 		return http_errors.ErrorInvalidRequest
 	}
 
-	c.ChainProtocol.AddToMempool(nodeStatus.ToEntity())
+	c.ChainProtocol.AddToMempool(connectionBreak.ToEntity())
 
 	return ctx.Status(http.StatusOK).JSON(map[string]bool{
 		"success": true,
