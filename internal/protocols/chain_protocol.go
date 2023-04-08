@@ -245,7 +245,7 @@ func (p *ChainProtocol) CreateNewBlock() error {
 }
 
 func (p *ChainProtocol) WhoIsNext() string {
-
+	// todo
 	return ""
 }
 

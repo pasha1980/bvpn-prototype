@@ -14,14 +14,14 @@ import (
 	"time"
 )
 
-type Kernel struct {
+type CliApi struct {
 	URL      string
 	HttpPort uint64
 
 	Peers []entity.Node
 }
 
-func (k *Kernel) Run() {
+func (a *CliApi) Run() {
 	// Init protocols
 	peerProtocol := protocols.GetPeerProtocol()
 	chainProtocol := protocols.GetChainProtocol()
@@ -30,7 +30,7 @@ func (k *Kernel) Run() {
 	if _, err := os.Stat("initiate"); err != nil {
 
 		// Add new peers
-		for _, peer := range k.Peers {
+		for _, peer := range a.Peers {
 			peerProtocol.AddNewPeer(peer)
 		}
 
@@ -52,14 +52,14 @@ func (k *Kernel) Run() {
 			ChainProtocol: chainProtocol,
 			PeerProtocol:  peerProtocol,
 		}
-		err := http_in.InitHttp(c, ":"+strconv.FormatUint(k.HttpPort, 10), nil)
+		err := http_in.InitHttp(c, ":"+strconv.FormatUint(a.HttpPort, 10), nil)
 		if err != nil {
 			// todo
 		}
 	}()
 }
 
-func (k *Kernel) MakeTx(to string, amount float64) {
+func (a *CliApi) MakeTx(to string, amount float64) {
 	protocol := protocols.GetChainProtocol()
 
 	utxos, err := protocol.GetUTXOs()
@@ -154,14 +154,14 @@ func (k *Kernel) MakeTx(to string, amount float64) {
 	}
 }
 
-func (k *Kernel) MakeOffer(price float64) {
+func (a *CliApi) MakeOffer(price float64) {
 	protocol := protocols.GetChainProtocol()
 	offer := protocol.New(block_data.ChainStored{
 		Type: block_data.TypeOffer,
 		Data: block_data.Offer{
-			URL:       k.URL,
+			URL:       a.URL,
 			Price:     price,
-			Timestamp: time.Now().Unix(),
+			Timestamp: time.Now(),
 		},
 	})
 

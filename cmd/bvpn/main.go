@@ -82,7 +82,7 @@ func main() {
 	close(ctlc)
 }
 
-func createKernel() (*internal.Kernel, error) {
+func createKernel() (*internal.CliApi, error) {
 	yamlFile, err := os.ReadFile(configFile)
 	if err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func createKernel() (*internal.Kernel, error) {
 		cfg.Port = 80
 	}
 
-	kernel := internal.Kernel{
+	kernel := internal.CliApi{
 		URL:      cfg.Url,
 		HttpPort: cfg.Port,
 		Peers:    peers,
