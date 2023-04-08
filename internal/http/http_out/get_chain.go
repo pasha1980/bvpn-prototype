@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func GetFullChain(node entity.Node) []entity.Block { // todo: In method
+func GetFullChain(node entity.Node) []entity.Block {
 	var chain []entity.Block
 
 	const maxBufferSize = 50

@@ -32,7 +32,7 @@ func (c HttpController) AddTx(ctx *fiber.Ctx) error {
 		return http_errors.ErrorInvalidRequest
 	}
 
-	c.ChainProtocol.AddToMempool(tx.ToEntity())
+	c.ChainProtocol.AddToMempool(tx.ToEntity(), Node(ctx))
 
 	return ctx.Status(http.StatusOK).JSON(map[string]bool{
 		"success": true,
@@ -47,7 +47,7 @@ func (c HttpController) AddOffer(ctx *fiber.Ctx) error {
 		return http_errors.ErrorInvalidRequest
 	}
 
-	c.ChainProtocol.AddToMempool(offer.ToEntity())
+	c.ChainProtocol.AddToMempool(offer.ToEntity(), Node(ctx))
 
 	return ctx.Status(http.StatusOK).JSON(map[string]bool{
 		"success": true,
@@ -62,7 +62,7 @@ func (c HttpController) AddTraffic(ctx *fiber.Ctx) error {
 		return http_errors.ErrorInvalidRequest
 	}
 
-	c.ChainProtocol.AddToMempool(traffic.ToEntity())
+	c.ChainProtocol.AddToMempool(traffic.ToEntity(), Node(ctx))
 
 	return ctx.Status(http.StatusOK).JSON(map[string]bool{
 		"success": true,
@@ -77,7 +77,7 @@ func (c HttpController) AddConnectionBreak(ctx *fiber.Ctx) error {
 		return http_errors.ErrorInvalidRequest
 	}
 
-	c.ChainProtocol.AddToMempool(connectionBreak.ToEntity())
+	c.ChainProtocol.AddToMempool(connectionBreak.ToEntity(), Node(ctx))
 
 	return ctx.Status(http.StatusOK).JSON(map[string]bool{
 		"success": true,
@@ -92,7 +92,7 @@ func (c HttpController) AddBlock(ctx *fiber.Ctx) error {
 		return http_errors.ErrorInvalidRequest
 	}
 
-	err = c.ChainProtocol.AddBlock(blockDto.ToEntity())
+	err = c.ChainProtocol.AddBlock(blockDto.ToEntity(), Node(ctx))
 	if err != nil {
 		return err
 	}

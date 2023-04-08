@@ -11,8 +11,20 @@ type PeerProtocol struct {
 	repo repo.PeerStorageRepo
 }
 
-func (p *PeerProtocol) GetPeers() []entity.Node {
-	return p.repo.GetAll()
+func (p *PeerProtocol) GetPeers(except *entity.Node) []entity.Node {
+	var result []entity.Node
+	peers := p.repo.GetAll()
+	if except != nil {
+		for _, node := range peers {
+			if except.IP != node.IP {
+				result = append(result, node)
+			}
+		}
+	} else {
+		result = peers
+	}
+
+	return result
 }
 
 func (p *PeerProtocol) AddNewPeer(peer entity.Node) error {
@@ -36,7 +48,7 @@ func (p *PeerProtocol) ValidatePeer(peer entity.Node) error {
 }
 
 func (p *PeerProtocol) CheckPeers() {
-	peers := p.GetPeers()
+	peers := p.GetPeers(nil)
 	for _, node := range peers {
 		err := p.ValidatePeer(node)
 		if err != nil {

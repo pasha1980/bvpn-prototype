@@ -26,7 +26,7 @@ func (p *ChainProtocol) New(data block_data.ChainStored) block_data.ChainStored 
 	data.ID = uuid.New()
 	signer.Sign(&data)
 	mempool.AddNewElement(data)
-	http_out.BroadcastMempool(data, GetPeerProtocol().GetPeers())
+	go http_out.BroadcastMempool(data, GetPeerProtocol().GetPeers(nil))
 	return data
 }
 
@@ -74,7 +74,7 @@ func (p *ChainProtocol) UpdateChain() {
 	var err error
 	var chains [][]entity.Block
 
-	for _, node := range GetPeerProtocol().GetPeers() {
+	for _, node := range GetPeerProtocol().GetPeers(nil) {
 		peerChain := http_out.GetFullChain(node)
 		chains = append(chains, peerChain)
 	}
@@ -110,7 +110,7 @@ func (p *ChainProtocol) ReplaceChain(chain []entity.Block) error {
 	return nil
 }
 
-func (p *ChainProtocol) AddBlock(block entity.Block) error {
+func (p *ChainProtocol) AddBlock(block entity.Block, from *entity.Node) error {
 	lastBlock, err := p.repo.GetLastBlock()
 	if err != nil {
 		return protocol_error.LogInternalError(err.Error())
@@ -121,7 +121,7 @@ func (p *ChainProtocol) AddBlock(block entity.Block) error {
 		return err
 	}
 
-	http_out.BroadcastBlock(block, GetPeerProtocol().GetPeers())
+	go http_out.BroadcastBlock(block, GetPeerProtocol().GetPeers(from))
 
 	_, err = p.repo.SaveBlock(block)
 	if err != nil {
@@ -152,7 +152,7 @@ func (p *ChainProtocol) AddInitialBlock() error {
 	}
 
 	initialBlock.Hash = hasher.EncryptBlock(initialBlock)
-	err := p.AddBlock(initialBlock)
+	err := p.AddBlock(initialBlock, nil)
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func (p *ChainProtocol) ValidateBlock(block entity.Block, previousBlock *entity.
 	return err
 }
 
-func (p *ChainProtocol) AddToMempool(element block_data.ChainStored) {
+func (p *ChainProtocol) AddToMempool(element block_data.ChainStored, from *entity.Node) {
 
 	if element.Type == block_data.TypeOffer {
 		url := element.Data.(block_data.Offer).URL
@@ -199,7 +199,7 @@ func (p *ChainProtocol) AddToMempool(element block_data.ChainStored) {
 	if !mempool.IsExist(element.ID) {
 		mempool.AddNewElement(element)
 
-		http_out.BroadcastMempool(element, GetPeerProtocol().GetPeers())
+		go http_out.BroadcastMempool(element, GetPeerProtocol().GetPeers(from))
 	}
 }
 
@@ -233,7 +233,7 @@ func (p *ChainProtocol) CreateNewBlock() error {
 		Next:         next,
 	}
 	newBlock.Hash = hasher.EncryptBlock(newBlock)
-	if err = p.AddBlock(newBlock); err != nil {
+	if err = p.AddBlock(newBlock, nil); err != nil {
 		return err
 	}
 

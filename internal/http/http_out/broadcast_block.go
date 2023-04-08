@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func BroadcastBlock(block entity.Block, nodes []entity.Node) { // todo: In method
+func BroadcastBlock(block entity.Block, nodes []entity.Node) {
 	method := "/addBlock"
 	body, _ := json.Marshal(http_dto.BlockToDto(block))
 
