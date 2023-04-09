@@ -1,0 +1,5 @@
+package vpn
+
+func Init() {
+
+}

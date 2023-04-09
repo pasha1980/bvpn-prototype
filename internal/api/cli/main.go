@@ -1,37 +1,34 @@
-package internal
+package cli
 
 import (
 	"bvpn-prototype/internal/http/http_in"
 	"bvpn-prototype/internal/permatent_tasks"
 	"bvpn-prototype/internal/protocols"
-	"bvpn-prototype/internal/protocols/entity"
 	"bvpn-prototype/internal/protocols/entity/block_data"
 	"bvpn-prototype/internal/protocols/signer"
+	"bvpn-prototype/internal/storage/config"
 	"fmt"
 	"os"
+	"os/signal"
 	"sort"
 	"strconv"
+	"syscall"
 	"time"
 )
 
 type CliApi struct {
-	URL      string
-	HttpPort uint64
-
-	Peers []entity.Node
+	ChainProtocol *protocols.ChainProtocol
+	PeerProtocol  *protocols.PeerProtocol
+	Config        *config.Config
 }
 
-func (a *CliApi) Run() {
-	// Init protocols
-	peerProtocol := protocols.GetPeerProtocol()
-	chainProtocol := protocols.GetChainProtocol()
-
+func (a *CliApi) Init(detached bool) {
 	// Check if running for the first time
 	if _, err := os.Stat("initiate"); err != nil {
 
 		// Add new peers
-		for _, peer := range a.Peers {
-			peerProtocol.AddNewPeer(peer)
+		for _, peer := range a.Config.Peers {
+			a.PeerProtocol.AddNewPeer(peer)
 		}
 
 		// Initiate signer package
@@ -41,25 +38,29 @@ func (a *CliApi) Run() {
 		os.Create("initiate")
 	}
 
-	go chainProtocol.UpdateChain()
+	go a.ChainProtocol.UpdateChain()
 
 	// Init permanent jobs
 	permatent_tasks.Init()
 
+	// Init http server
 	go func() {
-		// Init http controller
-		c := http_in.HttpController{
-			ChainProtocol: chainProtocol,
-			PeerProtocol:  peerProtocol,
-		}
-		err := http_in.InitHttp(c, ":"+strconv.FormatUint(a.HttpPort, 10), nil)
+		err := http_in.InitHttp(":"+strconv.FormatUint(a.Config.HttpPort, 10), nil)
 		if err != nil {
 			// todo
 		}
 	}()
+
+	// run in live mode
+	if !detached {
+		ctlc := make(chan os.Signal)
+		signal.Notify(ctlc, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
+		<-ctlc
+		close(ctlc)
+	}
 }
 
-func (a *CliApi) MakeTx(to string, amount float64) {
+func (*CliApi) MakeTx(to string, amount float64) {
 	protocol := protocols.GetChainProtocol()
 
 	utxos, err := protocol.GetUTXOs()
@@ -159,7 +160,7 @@ func (a *CliApi) MakeOffer(price float64) {
 	offer := protocol.New(block_data.ChainStored{
 		Type: block_data.TypeOffer,
 		Data: block_data.Offer{
-			URL:       a.URL,
+			URL:       a.Config.URL,
 			Price:     price,
 			Timestamp: time.Now(),
 		},

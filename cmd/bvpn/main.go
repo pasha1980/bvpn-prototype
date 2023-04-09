@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bvpn-prototype/internal"
+	"bvpn-prototype/internal/api"
 	"bvpn-prototype/internal/protocols/entity"
 	"bvpn-prototype/internal/storage/config"
 	"fmt"
@@ -9,8 +9,6 @@ import (
 	"gopkg.in/yaml.v3"
 	"log"
 	"os"
-	"os/signal"
-	"syscall"
 )
 
 const defaultConfigFile = "config.yaml"
@@ -18,14 +16,12 @@ const defaultConfigFile = "config.yaml"
 var configFile = defaultConfigFile
 
 func main() {
-	ctlc := make(chan os.Signal)
-	signal.Notify(ctlc, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
-
 	var opts struct {
 		ConfigFile *string  `short:"c" long:"configs" description:"Configuration file" required:"false"`
 		To         *string  `short:"t" long:"to" description:"Receiver" required:"false"`
 		Amount     *float64 `short:"a" long:"amount" description:"Amount" required:"false"`
 		Price      *float64 `short:"p" long:"price" description:"Price" required:"false"`
+		Detached   bool     `short:"d" long:"detached" description:"Run in detached mode" required:"false"`
 	}
 
 	commands, err := flags.Parse(&opts)
@@ -37,15 +33,17 @@ func main() {
 	if opts.ConfigFile != nil {
 		configFile = *opts.ConfigFile
 	}
-	kernel, err := createKernel()
+	cfg, err := parseConfig()
 	if err != nil {
 		log.Fatalln(err)
 	}
 
+	cliApi := api.CLI(cfg)
+
 	switch command {
 	case "run":
-		kernel.Run()
-		<-ctlc
+	case "init":
+		cliApi.Init(opts.Detached)
 		break
 	case "make":
 		switch commands[1] {
@@ -60,7 +58,7 @@ func main() {
 				log.Fatalln("Should I send everything you have????")
 			}
 
-			kernel.MakeTx(
+			cliApi.MakeTx(
 				*opts.To,
 				*opts.Amount,
 			)
@@ -70,7 +68,7 @@ func main() {
 				log.Fatalln("I'll sell you to devil, if you will not tell me the price!")
 			}
 
-			kernel.MakeOffer(*opts.Price)
+			cliApi.MakeOffer(*opts.Price)
 
 			break
 		}
@@ -78,17 +76,15 @@ func main() {
 	default:
 		fmt.Println("Hello") // todo
 	}
-
-	close(ctlc)
 }
 
-func createKernel() (*internal.CliApi, error) {
+func parseConfig() (*config.Config, error) {
 	yamlFile, err := os.ReadFile(configFile)
 	if err != nil {
 		return nil, err
 	}
 
-	var cfg struct {
+	var yamlCfg struct {
 		Url   string `yaml:"url"`
 		Port  uint64 `yaml:"port"`
 		Peers []struct {
@@ -99,33 +95,31 @@ func createKernel() (*internal.CliApi, error) {
 		} `yaml:"peers"`
 	}
 
-	err = yaml.Unmarshal(yamlFile, &cfg)
+	err = yaml.Unmarshal(yamlFile, &yamlCfg)
 	if err != nil {
 		return nil, err
 	}
 
 	var peers []entity.Node
-	for _, peerCfg := range cfg.Peers {
+	for _, peerCfg := range yamlCfg.Peers {
 		peers = append(peers, entity.Node{
 			URL: peerCfg.HttpUrl,
 			IP:  peerCfg.Ip,
 		})
 	}
 
-	if cfg.Port == 0 {
-		cfg.Port = 80
+	if yamlCfg.Port == 0 {
+		yamlCfg.Port = 80
 	}
 
-	kernel := internal.CliApi{
-		URL:      cfg.Url,
-		HttpPort: cfg.Port,
-		Peers:    peers,
-	}
-
-	config.Set(config.Config{
+	cfg := config.Config{
 		StorageDirectory: ".",
-		URL:              cfg.Url,
-	})
+		URL:              yamlCfg.Url,
+		HttpPort:         yamlCfg.Port,
+		Peers:            peers,
+	}
 
-	return &kernel, nil
+	config.Set(cfg)
+
+	return &cfg, nil
 }

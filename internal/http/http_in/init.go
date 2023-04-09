@@ -9,18 +9,17 @@ type TLSConfig struct {
 	KeyFile  string
 }
 
-// todo: Move to `internal` package and rename to HttpApi
-func InitHttp(controller HttpController, addr string, tlsConfig *TLSConfig) error {
+func InitHttp(addr string, tlsConfig *TLSConfig) error {
 	app := fiber.New(fiber.Config{
 		AppName:               "BVPN Prototype",
 		ErrorHandler:          errorHandler,
 		DisableStartupMessage: true,
 	})
 
-	app.Post("/:method", controller.HttpEntrypoint)
-	app.Get("/:method", controller.HttpEntrypoint)
-	app.Put("/:method", controller.HttpEntrypoint)
-	app.Patch("/:method", controller.HttpEntrypoint)
+	app.Post("/:method", entrypoint)
+	app.Get("/:method", entrypoint)
+	app.Put("/:method", entrypoint)
+	app.Patch("/:method", entrypoint)
 
 	var err error
 	if tlsConfig == nil {
