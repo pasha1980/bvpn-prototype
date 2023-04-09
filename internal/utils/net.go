@@ -14,3 +14,8 @@ func GetIp(url string) string {
 
 	return ""
 }
+
+func MyIP() string {
+	out, _ := Exec("curl ifconfig.me")
+	return out
+}

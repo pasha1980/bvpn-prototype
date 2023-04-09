@@ -85,13 +85,17 @@ func parseConfig() (*config.Config, error) {
 	}
 
 	var yamlCfg struct {
-		Url   string `yaml:"url"`
-		Port  uint64 `yaml:"port"`
+		Http struct {
+			Port string `yaml:"port"`
+			URL  string `yaml:"url"`
+		} `yaml:"http"`
+		VPN struct {
+			Port  string `yaml:"port"`
+			Proto string `yaml:"proto"`
+		}
 		Peers []struct {
-			Ip string `yaml:"ip"`
-			//VpnUrl  string  `yaml:"vpn_url"`
-			HttpUrl string `yaml:"http_url"`
-			//Secret  *string `yaml:"secret"`
+			Ip      string `yaml:"ip"`
+			HttpUrl string `yaml:"url"`
 		} `yaml:"peers"`
 	}
 
@@ -99,6 +103,8 @@ func parseConfig() (*config.Config, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// todo: validation
 
 	var peers []entity.Node
 	for _, peerCfg := range yamlCfg.Peers {
@@ -108,14 +114,12 @@ func parseConfig() (*config.Config, error) {
 		})
 	}
 
-	if yamlCfg.Port == 0 {
-		yamlCfg.Port = 80
-	}
-
 	cfg := config.Config{
 		StorageDirectory: ".",
-		URL:              yamlCfg.Url,
-		HttpPort:         yamlCfg.Port,
+		URL:              yamlCfg.Http.URL,
+		HttpPort:         yamlCfg.Http.Port,
+		VpnPort:          yamlCfg.VPN.Port,
+		VpnProto:         yamlCfg.VPN.Proto,
 		Peers:            peers,
 	}
 

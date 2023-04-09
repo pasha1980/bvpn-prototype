@@ -5,7 +5,6 @@ import (
 	"bvpn-prototype/internal/http/http_dto/mempool_data_dto"
 	"bvpn-prototype/internal/http/http_errors"
 	"bvpn-prototype/internal/protocols"
-	"bvpn-prototype/internal/protocols/entity"
 	"bvpn-prototype/internal/protocols/signer"
 	"github.com/gofiber/fiber/v2"
 	"net/http"
@@ -30,9 +29,7 @@ func (c HttpApi) AddTx(ctx *fiber.Ctx) error {
 		return http_errors.ErrorInvalidRequest
 	}
 
-	c.ChainProtocol.AddToMempool(tx.ToEntity(), &entity.Node{
-		IP: ctx.IP(),
-	})
+	c.ChainProtocol.AddToMempool(tx.ToEntity(), Node(ctx))
 
 	return ctx.Status(http.StatusOK).JSON(map[string]bool{
 		"success": true,
@@ -47,9 +44,7 @@ func (c HttpApi) AddOffer(ctx *fiber.Ctx) error {
 		return http_errors.ErrorInvalidRequest
 	}
 
-	c.ChainProtocol.AddToMempool(offer.ToEntity(), &entity.Node{
-		IP: ctx.IP(),
-	})
+	c.ChainProtocol.AddToMempool(offer.ToEntity(), Node(ctx))
 
 	return ctx.Status(http.StatusOK).JSON(map[string]bool{
 		"success": true,
@@ -64,9 +59,7 @@ func (c HttpApi) AddTraffic(ctx *fiber.Ctx) error {
 		return http_errors.ErrorInvalidRequest
 	}
 
-	c.ChainProtocol.AddToMempool(traffic.ToEntity(), &entity.Node{
-		IP: ctx.IP(),
-	})
+	c.ChainProtocol.AddToMempool(traffic.ToEntity(), Node(ctx))
 
 	return ctx.Status(http.StatusOK).JSON(map[string]bool{
 		"success": true,
@@ -81,9 +74,7 @@ func (c HttpApi) AddConnectionBreak(ctx *fiber.Ctx) error {
 		return http_errors.ErrorInvalidRequest
 	}
 
-	c.ChainProtocol.AddToMempool(connectionBreak.ToEntity(), &entity.Node{
-		IP: ctx.IP(),
-	})
+	c.ChainProtocol.AddToMempool(connectionBreak.ToEntity(), Node(ctx))
 
 	return ctx.Status(http.StatusOK).JSON(map[string]bool{
 		"success": true,
@@ -98,9 +89,7 @@ func (c HttpApi) AddBlock(ctx *fiber.Ctx) error {
 		return http_errors.ErrorInvalidRequest
 	}
 
-	err = c.ChainProtocol.AddBlock(blockDto.ToEntity(), &entity.Node{
-		IP: ctx.IP(),
-	})
+	err = c.ChainProtocol.AddBlock(blockDto.ToEntity(), Node(ctx))
 	if err != nil {
 		return err
 	}

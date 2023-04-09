@@ -33,7 +33,6 @@ func (st *s) save() {
 		Headers: nil,
 		Bytes:   encoded,
 	})
-
 }
 
 func storage() *s {

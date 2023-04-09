@@ -7,11 +7,11 @@ import (
 	"bvpn-prototype/internal/protocols/entity/block_data"
 	"bvpn-prototype/internal/protocols/signer"
 	"bvpn-prototype/internal/storage/config"
+	vpn_internal "bvpn-prototype/internal/vpn"
 	"fmt"
 	"os"
 	"os/signal"
 	"sort"
-	"strconv"
 	"syscall"
 	"time"
 )
@@ -34,6 +34,9 @@ func (a *CliApi) Init(detached bool) {
 		// Initiate signer package
 		signer.Init()
 
+		// Prepare all for vpn connections
+		vpn_internal.Init(a.Config.VpnPort, a.Config.VpnProto)
+
 		// Marker
 		os.Create("initiate")
 	}
@@ -45,7 +48,7 @@ func (a *CliApi) Init(detached bool) {
 
 	// Init http server
 	go func() {
-		err := http_in.InitHttp(":"+strconv.FormatUint(a.Config.HttpPort, 10), nil)
+		err := http_in.InitHttp(":"+a.Config.HttpPort, nil)
 		if err != nil {
 			// todo
 		}

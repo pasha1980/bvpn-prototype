@@ -1,5 +1,12 @@
-url: http://127.0.0.1:8080
-port: 8080
+
+http:
+  port: 8080
+  url: http://127.0.0.1:8080
+
+vpn:
+  port: 8392
+  proto: tcp
+
 peers:
   - ip: 127.0.0.1
-    http_url: http://127.0.0.1:8080
+    url: http://127.0.0.1:8080
