@@ -1,81 +1,74 @@
 package main
 
 import (
-	"bvpn-prototype/internal/api"
-	"bvpn-prototype/internal/protocols/entity"
-	"bvpn-prototype/internal/storage/config"
-	"fmt"
-	"github.com/jessevdk/go-flags"
+	"bvpn-prototype/internal/cli/api"
+	"bvpn-prototype/internal/cli/domain"
+	"bvpn-prototype/internal/infrastructure/config"
+	internal_di "bvpn-prototype/internal/infrastructure/di"
+	"bvpn-prototype/internal/infrastructure/logger"
+	"bvpn-prototype/internal/protocol/entity"
+	"github.com/go-playground/validator/v10"
+	"github.com/sarulabs/di"
 	"gopkg.in/yaml.v3"
-	"log"
 	"os"
 )
 
 const defaultConfigFile = "config.yaml"
 
-var configFile = defaultConfigFile
+var configFile = defaultConfigFile // todo: custom
 
 func main() {
-	var opts struct {
-		ConfigFile *string  `short:"c" long:"configs" description:"Configuration file" required:"false"`
-		To         *string  `short:"t" long:"to" description:"Receiver" required:"false"`
-		Amount     *float64 `short:"a" long:"amount" description:"Amount" required:"false"`
-		Price      *float64 `short:"p" long:"price" description:"Price" required:"false"`
-		Detached   bool     `short:"d" long:"detached" description:"Run in detached mode" required:"false"`
-	}
-
-	commands, err := flags.Parse(&opts)
+	command := os.Args[1]
+	_, err := parseConfig()
 	if err != nil {
-		log.Fatalln(err)
-	}
-	command := commands[0]
-
-	if opts.ConfigFile != nil {
-		configFile = *opts.ConfigFile
-	}
-	cfg, err := parseConfig()
-	if err != nil {
-		log.Fatalln(err)
+		panic(err)
 	}
 
-	cliApi := api.CLI(cfg)
+	logger.Init()
+	setupDi()
 
+	cli := internal_di.Get("cli_api").(*api.CliApi)
 	switch command {
+
 	case "run":
 	case "init":
-		cliApi.Init(opts.Detached)
+		cli.Init()
 		break
+
 	case "make":
-		switch commands[1] {
+		switch os.Args[2] {
+
 		case "transaction":
 		case "tx":
-
-			if opts.To == nil {
-				log.Fatalln("To whom?")
-			}
-
-			if opts.Amount == nil {
-				log.Fatalln("Should I send everything you have????")
-			}
-
-			cliApi.MakeTx(
-				*opts.To,
-				*opts.Amount,
-			)
+			cli.MakeTx()
 			break
+
 		case "offer":
-			if opts.Price == nil {
-				log.Fatalln("I'll sell you to devil, if you will not tell me the price!")
-			}
-
-			cliApi.MakeOffer(*opts.Price)
-
+			cli.MakeOffer()
 			break
 		}
 		break
-	default:
-		fmt.Println("Hello") // todo
 	}
+}
+
+func setupDi() {
+	app, _ := di.NewBuilder()
+
+	app.Add(di.Def{
+		Name: "cli_api",
+		Build: func(ctn di.Container) (interface{}, error) {
+			return api.NewCliApi()
+		},
+	})
+
+	app.Add(di.Def{
+		Name: "cli_service",
+		Build: func(ctn di.Container) (interface{}, error) {
+			return domain.NewCliService()
+		},
+	})
+
+	internal_di.Set(app.Build())
 }
 
 func parseConfig() (*config.Config, error) {
@@ -87,16 +80,16 @@ func parseConfig() (*config.Config, error) {
 	var yamlCfg struct {
 		Http struct {
 			Port string `yaml:"port"`
-			URL  string `yaml:"url"`
+			URL  string `yaml:"url" validate:"http_url"`
 		} `yaml:"http"`
 		VPN struct {
 			Port  string `yaml:"port"`
-			Proto string `yaml:"proto"`
+			Proto string `yaml:"proto" validate:"oneof=udp tcp"`
 		}
 		Peers []struct {
-			Ip      string `yaml:"ip"`
-			HttpUrl string `yaml:"url"`
-		} `yaml:"peers"`
+			Ip      string `yaml:"ip" validate:"ip"`
+			HttpUrl string `yaml:"url" validate:"http_url"`
+		} `yaml:"peers" validate:"dive"`
 	}
 
 	err = yaml.Unmarshal(yamlFile, &yamlCfg)
@@ -104,7 +97,10 @@ func parseConfig() (*config.Config, error) {
 		return nil, err
 	}
 
-	// todo: validation
+	err = validator.New().Struct(yamlCfg)
+	if err != nil {
+		return nil, err
+	}
 
 	var peers []entity.Node
 	for _, peerCfg := range yamlCfg.Peers {

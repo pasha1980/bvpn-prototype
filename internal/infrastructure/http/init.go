@@ -16,35 +16,35 @@ func Init(port string, tlsConfig *TLSConfig) error {
 		DisableStartupMessage: true,
 	})
 
-	initChainHttp(app)
-	initVpnHttp(app)
-	initPeerHttp(app)
+	fillChainEntrypoints(app)
+	fillVpnEntrypoints(app)
+	fillPeerEntrypoints(app)
 
 	var err error
 	if tlsConfig == nil {
-		err = app.Listen(port)
+		err = app.Listen(":" + port)
 	} else {
-		err = app.ListenTLS(port, tlsConfig.CertFile, tlsConfig.KeyFile)
+		err = app.ListenTLS(":"+port, tlsConfig.CertFile, tlsConfig.KeyFile)
 	}
 
 	return err
 }
 
-func initChainHttp(app *fiber.App) {
+func fillChainEntrypoints(app *fiber.App) {
 	app.Post("/chain/:method", chainEntrypoint)
 	app.Get("/chain/:method", chainEntrypoint)
 	app.Put("/chain/:method", chainEntrypoint)
 	app.Patch("/chain/:method", chainEntrypoint)
 }
 
-func initVpnHttp(app *fiber.App) {
+func fillVpnEntrypoints(app *fiber.App) {
 	app.Post("/vpn/:method", vpnEntrypoint)
 	app.Get("/vpn/:method", vpnEntrypoint)
 	app.Put("/vpn/:method", vpnEntrypoint)
 	app.Patch("/vpn/:method", vpnEntrypoint)
 }
 
-func initPeerHttp(app *fiber.App) {
+func fillPeerEntrypoints(app *fiber.App) {
 	app.Post("/vpn/:method", peerEntrypoint)
 	app.Get("/vpn/:method", peerEntrypoint)
 	app.Put("/vpn/:method", peerEntrypoint)

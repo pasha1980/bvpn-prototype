@@ -1,64 +1,53 @@
-package api
+package domain
 
 import (
-	"bvpn-prototype/internal/infrastructure/tasks"
-	"bvpn-prototype/internal/vpn"
+	"bvpn-prototype/internal/infrastructure/config"
+	"bvpn-prototype/internal/infrastructure/di"
+	"bvpn-prototype/internal/infrastructure/http"
+	"bvpn-prototype/internal/protocol/entity/block_data"
+	"bvpn-prototype/internal/protocol/signer"
 	"fmt"
 	"os"
-	"os/signal"
 	"sort"
-	"syscall"
 	"time"
 )
 
-type CliApi struct {
+type CliService struct {
 }
 
-func (a *CliApi) Init(detached bool) {
-	// Check if running for the first time
+func (*CliService) Init() {
 	if _, err := os.Stat("initiate"); err != nil {
 
-		// Add new peers
-		for _, peer := range a.Config.Peers {
-			a.PeerProtocol.AddNewPeer(peer)
+		peerPublic := di.Get("peer_public").(PeerPublicService)
+		for _, peer := range config.Get().Peers {
+			peerPublic.AddPeer(peer)
 		}
 
-		// Initiate signer package
-		signer.Init()
+		err = di.Get("vpn_public").(VpnPublicService).Init()
+		if err != nil {
+			panic(err)
+		}
 
-		// Prepare all for vpn connections
-		vpn.Init(a.Config.VpnPort, a.Config.VpnProto)
-
-		// Marker
 		os.Create("initiate")
 	}
 
-	go a.ChainProtocol.UpdateChain()
+	chainPublic := di.Get("chain_public").(ChainPublicService)
+	go chainPublic.UpdateChain()
 
-	// Init permanent jobs
-	tasks.Init()
-
-	// Init http server
 	go func() {
-		err := http_in.InitHttp(":"+a.Config.HttpPort, nil)
+		err := http.Init(
+			config.Get().HttpPort,
+			nil, // todo
+		)
 		if err != nil {
-			// todo
+			panic(err)
 		}
 	}()
-
-	// run in live mode
-	if !detached {
-		ctlc := make(chan os.Signal)
-		signal.Notify(ctlc, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
-		<-ctlc
-		close(ctlc)
-	}
 }
 
-func (*CliApi) MakeTx(to string, amount float64) {
-	protocol := protocols.GetChainProtocol()
-
-	utxos, err := protocol.GetUTXOs()
+func (*CliService) MakeTx(to string, amount float64) {
+	chainPublic := di.Get("chain_public").(ChainPublicService)
+	utxos, err := chainPublic.GetUTXOs()
 	if err != nil {
 		// todo
 		return
@@ -82,7 +71,7 @@ func (*CliApi) MakeTx(to string, amount float64) {
 	var sum float64
 	for _, utxo := range utxos {
 		if utxo.Data.(block_data.Transaction).Amount >= amount {
-			tx := protocol.New(block_data.ChainStored{
+			tx, _ := chainPublic.NewEntity(block_data.ChainStored{
 				Type: block_data.TypeTransaction,
 				Data: block_data.Transaction{
 					From:   utxo.ID.String(),
@@ -90,10 +79,10 @@ func (*CliApi) MakeTx(to string, amount float64) {
 					Amount: amount,
 				},
 			})
-			fmt.Println(tx) // todo
+			fmt.Println(tx)
 
 			if utxo.Data.(block_data.Transaction).Amount != amount {
-				toMe := protocol.New(block_data.ChainStored{
+				toMe, _ := chainPublic.NewEntity(block_data.ChainStored{
 					Type: block_data.TypeTransaction,
 					Data: block_data.Transaction{
 						From:   utxo.ID.String(),
@@ -101,7 +90,7 @@ func (*CliApi) MakeTx(to string, amount float64) {
 						Amount: utxo.Data.(block_data.Transaction).Amount - amount,
 					},
 				})
-				fmt.Println(toMe) // todo
+				fmt.Println(toMe)
 			}
 			break
 		}
@@ -116,7 +105,7 @@ func (*CliApi) MakeTx(to string, amount float64) {
 	for _, utxo := range validForTx {
 		utxoAmount := utxo.Data.(block_data.Transaction).Amount
 		if sum > utxoAmount {
-			tx := protocol.New(block_data.ChainStored{
+			tx, _ := chainPublic.NewEntity(block_data.ChainStored{
 				Type: block_data.TypeTransaction,
 				Data: block_data.Transaction{
 					From:   utxo.ID.String(),
@@ -126,7 +115,7 @@ func (*CliApi) MakeTx(to string, amount float64) {
 			})
 			fmt.Println(tx) // todo
 		} else {
-			tx := protocol.New(block_data.ChainStored{
+			tx, _ := chainPublic.NewEntity(block_data.ChainStored{
 				Type: block_data.TypeTransaction,
 				Data: block_data.Transaction{
 					From:   utxo.ID.String(),
@@ -136,7 +125,7 @@ func (*CliApi) MakeTx(to string, amount float64) {
 			})
 			fmt.Println(tx) // todo
 
-			toMe := protocol.New(block_data.ChainStored{
+			toMe, _ := chainPublic.NewEntity(block_data.ChainStored{
 				Type: block_data.TypeTransaction,
 				Data: block_data.Transaction{
 					From:   utxo.ID.String(),
@@ -150,20 +139,24 @@ func (*CliApi) MakeTx(to string, amount float64) {
 	}
 }
 
-func (a *CliApi) MakeOffer(price float64) {
-	protocol := protocols.GetChainProtocol()
-	offer := protocol.New(block_data.ChainStored{
+func (*CliService) MakeOffer(price float64) {
+	chainPublic := di.Get("chain_public").(ChainPublicService)
+	offer, err := chainPublic.NewEntity(block_data.ChainStored{
 		Type: block_data.TypeOffer,
 		Data: block_data.Offer{
-			URL:       a.Config.URL,
+			URL:       config.Get().URL,
 			Price:     price,
 			Timestamp: time.Now(),
 		},
 	})
 
+	if err != nil {
+		panic(err)
+	}
+
 	fmt.Println(fmt.Sprintf("%+v\n", offer))
 }
 
-func NewCLI() *CliApi {
-	return &CliApi{}
+func NewCliService() (*CliService, error) {
+	return &CliService{}, nil
 }
