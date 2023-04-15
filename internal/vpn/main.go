@@ -2,7 +2,7 @@ package vpn
 
 import (
 	"bvpn-prototype/internal/storage/vpn_profile"
-	"bvpn-prototype/internal/utils"
+	utils2 "bvpn-prototype/utils"
 	"fmt"
 	"github.com/songgao/water"
 	"net"
@@ -10,6 +10,10 @@ import (
 
 var listener net.Listener
 var conn net.Conn
+
+/*
+todo: Encryption - decryption
+*/
 
 func Init(port string, proto string) error {
 	err := vpn_profile.InitStorage()
@@ -22,12 +26,12 @@ func Init(port string, proto string) error {
 		return err // todo
 	}
 
-	listener, err = net.Listen(proto, utils.MyIP()+":"+port)
+	listener, err = net.Listen(proto, utils2.MyIP()+":"+port)
 	if err != nil {
 		return err // todo
 	}
 
-	go listen(iface)
+	go listenConn(iface)
 	go listenInterface(iface)
 
 	return nil
@@ -42,19 +46,19 @@ func createTun() (*water.Interface, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = utils.Exec(fmt.Sprintf("sudo ip addr add 0.0.0.0/0 dev %s", iface.Name()))
+	_, err = utils2.Exec(fmt.Sprintf("sudo ip addr add 0.0.0.0/0 dev %s", iface.Name()))
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = utils.Exec(fmt.Sprintf("sudo ip link set dev %s up", iface.Name()))
+	_, err = utils2.Exec(fmt.Sprintf("sudo ip link set dev %s up", iface.Name()))
 	if err != nil {
 		return nil, err
 	}
 	return iface, nil
 }
 
-func listen(iface *water.Interface) {
+func listenConn(iface *water.Interface) {
 	var err error
 	conn, err = listener.Accept()
 	if err != nil {
