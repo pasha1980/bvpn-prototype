@@ -1,13 +1,13 @@
 package api_out
 
 import (
-	"bvpn-prototype/internal/protocols/entity"
+	"bvpn-prototype/internal/protocol/entity"
 	"github.com/valyala/fasthttp"
 	"net/http"
 )
 
 func HealthCheck(node entity.Node) bool {
-	method := "/healthCheck"
+	method := "/peer/healthCheck"
 
 	req := fasthttp.AcquireRequest()
 	req.Header.SetMethod(http.MethodGet)

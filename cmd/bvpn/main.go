@@ -7,6 +7,7 @@ import (
 	"bvpn-prototype/internal/infrastructure/config"
 	internal_di "bvpn-prototype/internal/infrastructure/di"
 	"bvpn-prototype/internal/infrastructure/logger"
+	"bvpn-prototype/internal/peer/domain"
 	"bvpn-prototype/internal/protocol/entity"
 	"github.com/go-playground/validator/v10"
 	"github.com/sarulabs/di"
@@ -74,6 +75,20 @@ func setupDi() {
 		Name: "chain_public",
 		Build: func(ctn di.Container) (interface{}, error) {
 			return chain_domain.NewChainService()
+		},
+	})
+
+	app.Add(di.Def{
+		Name: "peer_service",
+		Build: func(ctn di.Container) (interface{}, error) {
+			return domain.NewPeerService()
+		},
+	})
+
+	app.Add(di.Def{
+		Name: "peer_public",
+		Build: func(ctn di.Container) (interface{}, error) {
+			return domain.NewPeerService()
 		},
 	})
 

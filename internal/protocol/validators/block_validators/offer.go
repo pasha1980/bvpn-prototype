@@ -1,12 +1,10 @@
 package block_validators
 
 import (
-	"bvpn-prototype/internal/http/http_out"
-	"bvpn-prototype/internal/protocols/entity"
-	"bvpn-prototype/internal/protocols/entity/block_data"
-	"bvpn-prototype/internal/protocols/hasher"
-	"bvpn-prototype/internal/protocols/protocol_error"
-	"bvpn-prototype/internal/protocols/validators/node_validators"
+	"bvpn-prototype/internal/protocol/entity"
+	"bvpn-prototype/internal/protocol/entity/block_data"
+	"bvpn-prototype/internal/protocol/protocol_error"
+	"bvpn-prototype/internal/protocol/validators/node_validators"
 	"bvpn-prototype/utils"
 )
 
@@ -30,14 +28,7 @@ func offerValidation(block entity.Block, previousBlock *entity.Block) error {
 			}
 		}
 
-		address, err := http_out.GetAddr(node)
-		if err != nil {
-			return protocol_error.BlockValidationError("Invalid offer ("+err.Error()+")", block.Number)
-		}
-
-		if address != hasher.EncryptString(data.PubKey) {
-			return protocol_error.BlockValidationError("Invalid offer (invalid signature)", block.Number)
-		}
+		// todo: what if somaone made offer not from himself
 	}
 
 	return nil

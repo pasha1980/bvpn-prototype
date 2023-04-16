@@ -1,9 +1,9 @@
 package block_validators
 
 import (
-	"bvpn-prototype/internal/protocols/entity"
-	"bvpn-prototype/internal/protocols/hasher"
-	"bvpn-prototype/internal/protocols/protocol_error"
+	"bvpn-prototype/internal/protocol/entity"
+	"bvpn-prototype/internal/protocol/hasher"
+	"bvpn-prototype/internal/protocol/protocol_error"
 )
 
 func hashValidation(block entity.Block, previousBlock *entity.Block) error {

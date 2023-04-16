@@ -45,8 +45,8 @@ func fillVpnEntrypoints(app *fiber.App) {
 }
 
 func fillPeerEntrypoints(app *fiber.App) {
-	app.Post("/vpn/:method", peerEntrypoint)
-	app.Get("/vpn/:method", peerEntrypoint)
-	app.Put("/vpn/:method", peerEntrypoint)
-	app.Patch("/vpn/:method", peerEntrypoint)
+	app.Post("/peer/:method", peerEntrypoint)
+	app.Get("/peer/:method", peerEntrypoint)
+	app.Put("/peer/:method", peerEntrypoint)
+	app.Patch("/peer/:method", peerEntrypoint)
 }

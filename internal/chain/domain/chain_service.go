@@ -135,8 +135,11 @@ func (s *ChainServiceImpl) GetChain(limit int, offset int) ([]entity.Block, erro
 	return c, nil
 }
 
-func (s *ChainServiceImpl) ValidateStoredChain() error {
-	return protocol.ValidateChain(s.chainReader)
+func (s *ChainServiceImpl) ValidateStoredChain() {
+	err := protocol.ValidateChain(s.chainReader)
+	if err != nil {
+		// todo: what to do
+	}
 }
 
 func (s *ChainServiceImpl) replaceChain(chain []entity.Block) error {

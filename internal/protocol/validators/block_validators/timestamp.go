@@ -1,8 +1,8 @@
 package block_validators
 
 import (
-	"bvpn-prototype/internal/protocols/entity"
-	"bvpn-prototype/internal/protocols/protocol_error"
+	"bvpn-prototype/internal/protocol/entity"
+	"bvpn-prototype/internal/protocol/protocol_error"
 	"time"
 )
 

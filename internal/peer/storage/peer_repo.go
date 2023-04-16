@@ -1,8 +1,8 @@
-package peer
+package storage
 
 import (
-	"bvpn-prototype/internal/protocols/entity"
-	"bvpn-prototype/internal/storage/config"
+	"bvpn-prototype/internal/infrastructure/config"
+	"bvpn-prototype/internal/protocol/entity"
 	"encoding/base64"
 	"encoding/json"
 	"os"
