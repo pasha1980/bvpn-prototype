@@ -30,16 +30,3 @@ func (t *Traffic) ToEntity() block_data.ChainStored {
 		},
 	}
 }
-
-func TrafficToDto(entity block_data.ChainStored) Traffic {
-	traffic := entity.Data.(block_data.Traffic)
-	return Traffic{
-		ID:        entity.ID,
-		Sign:      entity.Sign,
-		PubKey:    entity.PubKey,
-		Node:      traffic.Node,
-		Client:    traffic.Client,
-		Gb:        traffic.Gb,
-		Timestamp: traffic.Timestamp.Unix(),
-	}
-}

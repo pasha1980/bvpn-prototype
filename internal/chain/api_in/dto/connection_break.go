@@ -27,14 +27,3 @@ func (b *ConnectionBreak) ToEntity() block_data.ChainStored {
 		},
 	}
 }
-
-func ConnectionBreakToDto(entity block_data.ChainStored) ConnectionBreak {
-	cb := entity.Data.(block_data.ConnectionBreak)
-	return ConnectionBreak{
-		ID:        entity.ID,
-		Sign:      entity.Sign,
-		PubKey:    entity.PubKey,
-		Node:      cb.Node,
-		Timestamp: cb.Timestamp.Unix(),
-	}
-}

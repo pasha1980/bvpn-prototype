@@ -163,9 +163,18 @@ func (r *ChainRepository) GetBlockByNumber(number uint64) (*entity.Block, error)
 	return b, nil
 }
 
-func (r *ChainRepository) GetChain(limit int, offset int) ([]entity.Block, error) {
+func (r *ChainRepository) GetChain(limit *int, offset *int) ([]entity.Block, error) {
 	var blockModels []models.Block
-	err := r.db.Limit(limit).Offset(offset).Find(&blockModels).Error
+	query := r.db
+
+	if limit != nil {
+		query.Limit(*limit)
+		if offset != nil {
+			query.Offset(*offset)
+		}
+	}
+
+	err := query.Find(&blockModels).Error
 	if err != nil {
 		return nil, err
 	}

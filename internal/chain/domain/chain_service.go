@@ -15,7 +15,7 @@ import (
 type ChainService interface {
 	AddToMempool(entity block_data.ChainStored, from *entity.Node) error
 	AddBlock(block entity.Block, from *entity.Node) error
-	GetChain(limit int, offset int) ([]entity.Block, error)
+	GetChain(limit *int, offset *int) ([]entity.Block, error)
 	ValidateStoredChain()
 	UpdateChain()
 }
@@ -127,7 +127,7 @@ func (s *ChainServiceImpl) AddBlock(block entity.Block, from *entity.Node) error
 	return nil
 }
 
-func (s *ChainServiceImpl) GetChain(limit int, offset int) ([]entity.Block, error) {
+func (s *ChainServiceImpl) GetChain(limit *int, offset *int) ([]entity.Block, error) {
 	c, err := s.chainRepo.GetChain(limit, offset)
 	if err != nil {
 		return nil, err // todo: domain errors

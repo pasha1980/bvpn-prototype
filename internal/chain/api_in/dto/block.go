@@ -10,10 +10,10 @@ type BlockDto struct {
 	Number       uint64                   `json:"number"`
 	Hash         string                   `json:"hash"`
 	PreviousHash string                   `json:"previousHash"`
-	Data         []block_data.ChainStored `json:"data"`
-	TimeStamp    time.Time                `json:"timeStamp"`
+	Data         []block_data.ChainStored `json:"data" validate:"dive"`
+	TimeStamp    int64                    `json:"timeStamp" `
 	Next         string                   `json:"next"`
-	CreatedBy    string                   `json:"createdByy"`
+	CreatedBy    string                   `json:"createdBy"`
 }
 
 func (d *BlockDto) ToEntity() entity.Block {
@@ -58,7 +58,7 @@ func (d *BlockDto) ToEntity() entity.Block {
 		Hash:         d.Hash,
 		PreviousHash: d.PreviousHash,
 		Data:         data,
-		TimeStamp:    d.TimeStamp,
+		TimeStamp:    time.Unix(d.TimeStamp, 0),
 		Next:         d.Next,
 		CreatedBy:    d.CreatedBy,
 	}
@@ -70,7 +70,7 @@ func BlockToDto(block entity.Block) BlockDto {
 		Hash:         block.Hash,
 		PreviousHash: block.PreviousHash,
 		Data:         block.Data,
-		TimeStamp:    block.TimeStamp,
+		TimeStamp:    block.TimeStamp.Unix(),
 		Next:         block.Next,
 		CreatedBy:    block.CreatedBy,
 	}

@@ -6,12 +6,12 @@ import (
 )
 
 type Transaction struct {
-	ID     uuid.UUID `json:"id" xml:"id" form:"id" query:"id"`
-	Sign   string    `json:"sign" xml:"sign" form:"sign" query:"sign"`
-	PubKey string    `json:"pub" xml:"pub" form:"pub" query:"pub"`
-	From   string    `json:"from" xml:"from" form:"from" query:"from"`
-	To     string    `json:"to" xml:"to" form:"to" query:"to"`
-	Amount float64   `json:"amount" xml:"amount" form:"amount" query:"amount"`
+	ID     uuid.UUID `json:"id"`
+	Sign   string    `json:"sign"`
+	PubKey string    `json:"pub"`
+	From   string    `json:"from"`
+	To     string    `json:"to"`
+	Amount float64   `json:"amount"`
 }
 
 func (t *Transaction) ToEntity() block_data.ChainStored {

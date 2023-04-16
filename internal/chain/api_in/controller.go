@@ -6,6 +6,7 @@ import (
 	"bvpn-prototype/internal/infrastructure/common"
 	"bvpn-prototype/internal/infrastructure/di"
 	"bvpn-prototype/internal/infrastructure/errors/http_errors"
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"net/http"
 )
@@ -21,7 +22,9 @@ func (ChainController) AddTx(ctx *fiber.Ctx) error {
 		return http_errors.InvalidRequest(err.Error())
 	}
 
-	// todo: validation
+	if err = validator.New().Struct(tx); err != nil {
+		return http_errors.InvalidRequest(err.Error())
+	}
 
 	c := di.Get("chain_service").(domain.ChainService)
 	err = c.AddToMempool(tx.ToEntity(), Node(ctx))
@@ -40,7 +43,9 @@ func (ChainController) AddOffer(ctx *fiber.Ctx) error {
 		return http_errors.InvalidRequest(err.Error())
 	}
 
-	// todo: validation
+	if err = validator.New().Struct(offer); err != nil {
+		return http_errors.InvalidRequest(err.Error())
+	}
 
 	c := di.Get("chain_service").(domain.ChainService)
 	err = c.AddToMempool(offer.ToEntity(), Node(ctx))
@@ -59,7 +64,9 @@ func (ChainController) AddTraffic(ctx *fiber.Ctx) error {
 		return http_errors.InvalidRequest(err.Error())
 	}
 
-	// todo: validation
+	if err = validator.New().Struct(traffic); err != nil {
+		return http_errors.InvalidRequest(err.Error())
+	}
 
 	c := di.Get("chain_service").(domain.ChainService)
 	err = c.AddToMempool(traffic.ToEntity(), Node(ctx))
@@ -78,7 +85,9 @@ func (ChainController) AddConnectionBreak(ctx *fiber.Ctx) error {
 		return http_errors.InvalidRequest(err.Error())
 	}
 
-	// todo: validation
+	if err = validator.New().Struct(connectionBreak); err != nil {
+		return http_errors.InvalidRequest(err.Error())
+	}
 
 	c := di.Get("chain_service").(domain.ChainService)
 	err = c.AddToMempool(connectionBreak.ToEntity(), Node(ctx))
@@ -97,7 +106,9 @@ func (ChainController) AddBlock(ctx *fiber.Ctx) error {
 		return http_errors.InvalidRequest(err.Error())
 	}
 
-	// todo: validation
+	if err = validator.New().Struct(blockDto); err != nil {
+		return http_errors.InvalidRequest(err.Error())
+	}
 
 	c := di.Get("chain_service").(domain.ChainService)
 	err = c.AddBlock(blockDto.ToEntity(), Node(ctx))
@@ -108,16 +119,18 @@ func (ChainController) AddBlock(ctx *fiber.Ctx) error {
 }
 
 func (ChainController) GetChain(ctx *fiber.Ctx) error {
-	var body map[string]int
+	var body dto.PaginationDto
 	err := ctx.BodyParser(&body)
 	if err != nil {
 		return http_errors.InvalidRequest(err.Error())
 	}
 
-	// todo: validation
+	if err = validator.New().Struct(body); err != nil {
+		return http_errors.InvalidRequest(err.Error())
+	}
 
 	c := di.Get("chain_service").(domain.ChainService)
-	chain, err := c.GetChain(body["limit"], body["offset"])
+	chain, err := c.GetChain(body.Limit, body.Offset)
 	if err != nil {
 		return err
 	}
