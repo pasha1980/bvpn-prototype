@@ -1,4 +1,4 @@
-package mempool
+package storage
 
 import (
 	"bvpn-prototype/internal/infrastructure/config"
@@ -12,18 +12,22 @@ import (
 	"time"
 )
 
-func AddNewElement(element block_data.ChainStored) {
-	updateData()
-	defer storeData()
-	storage.Data[element.ID.String()] = element
+type MempoolRepository struct {
+	Data map[string]block_data.ChainStored
 }
 
-func GetElements(size int) []block_data.ChainStored {
-	updateData()
+func (r *MempoolRepository) AddNewElement(element block_data.ChainStored) {
+	r.updateData()
+	defer r.storeData()
+	r.Data[element.ID.String()] = element
+}
+
+func (r *MempoolRepository) GetElements(size int) []block_data.ChainStored {
+	r.updateData()
 	var result []block_data.ChainStored
 
-	if utils2.SizeOf(storage.Data) < size {
-		for _, value := range storage.Data {
+	if utils2.SizeOf(r.Data) < size {
+		for _, value := range r.Data {
 			result = append(result, value)
 		}
 	}
@@ -33,7 +37,7 @@ func GetElements(size int) []block_data.ChainStored {
 
 	var temp []block_data.ChainStored
 	for {
-		element := randomElement(storage.Data)
+		element := r.randomElement(r.Data)
 		index := element.ID.String()
 		if utils2.InStringSlice(index, usedIndexes) {
 			continue
@@ -53,19 +57,19 @@ func GetElements(size int) []block_data.ChainStored {
 	return result
 }
 
-func IsExist(uuid uuid.UUID) bool {
-	updateData()
-	_, exist := storage.Data[uuid.String()]
+func (r *MempoolRepository) IsExist(uuid uuid.UUID) bool {
+	r.updateData()
+	_, exist := r.Data[uuid.String()]
 	return exist
 }
 
-func RemoveByIndex(index uuid.UUID) {
-	updateData()
-	defer storeData()
-	delete(storage.Data, index.String())
+func (r *MempoolRepository) RemoveByIndex(index uuid.UUID) {
+	r.updateData()
+	defer r.storeData()
+	delete(r.Data, index.String())
 }
 
-func randomElement(m map[string]block_data.ChainStored) block_data.ChainStored {
+func (r *MempoolRepository) randomElement(m map[string]block_data.ChainStored) block_data.ChainStored {
 	var e block_data.ChainStored
 
 	rand.Seed(time.Now().UnixNano())
@@ -81,31 +85,35 @@ func randomElement(m map[string]block_data.ChainStored) block_data.ChainStored {
 	return e
 }
 
-func updateData() {
-	storage = &pool{
-		Data: make(map[string]block_data.ChainStored),
-	}
+func (r *MempoolRepository) updateData() {
+	r.Data = make(map[string]block_data.ChainStored)
 	base64Encoded, err := os.ReadFile(config.Get().StorageDirectory + "/mempool.bvpn")
 	if err != nil {
-		storeData()
+		r.storeData() // todo
 	}
 
 	jsonEncoded, err := base64.StdEncoding.DecodeString(string(base64Encoded))
 	if err != nil {
-		storeData()
+		r.storeData()
 	}
 
-	err = json.Unmarshal(jsonEncoded, &storage)
+	err = json.Unmarshal(jsonEncoded, &r)
 	if err != nil {
-		storeData()
+		r.storeData()
 	}
 }
 
-func storeData() {
-	jsonEncoded, _ := json.Marshal(storage)
+func (r *MempoolRepository) storeData() {
+	jsonEncoded, _ := json.Marshal(r)
 	base64Encoded := base64.StdEncoding.EncodeToString(jsonEncoded)
 	err := os.WriteFile(config.Get().StorageDirectory+"/mempool.bvpn", []byte(base64Encoded), 0666)
 	if err != nil {
 		// todo: what to do
 	}
+}
+
+func NewMempoolRepo() (*MempoolRepository, error) {
+	repo := MempoolRepository{}
+	repo.updateData()
+	return &repo, nil
 }

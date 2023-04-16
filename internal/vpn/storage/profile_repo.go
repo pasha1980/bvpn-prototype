@@ -2,8 +2,7 @@ package storage
 
 import (
 	"bvpn-prototype/internal/infrastructure/config"
-	"bvpn-prototype/internal/vpn/domain"
-
+	"bvpn-prototype/internal/protocol/entity"
 	"encoding/pem"
 	"os"
 )
@@ -12,7 +11,7 @@ type ProfileRepo struct {
 	dir string
 }
 
-func (r *ProfileRepo) Save(profile domain.Profile) (domain.Profile, error) {
+func (r *ProfileRepo) Save(profile entity.Profile) (entity.Profile, error) {
 	keyFile := r.dir + "/" + profile.Id + "/prv.pem"
 	var file *os.File
 	if _, err := os.Stat(keyFile); os.IsNotExist(err) {
@@ -36,7 +35,7 @@ func (r *ProfileRepo) Save(profile domain.Profile) (domain.Profile, error) {
 	return profile, nil
 }
 
-func (r *ProfileRepo) Get(id string) (*domain.Profile, error) {
+func (r *ProfileRepo) Get(id string) (*entity.Profile, error) {
 	// tdodo
 	return nil, nil
 }

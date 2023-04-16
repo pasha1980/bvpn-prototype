@@ -1,10 +1,10 @@
 package signer
 
 import (
-	"bvpn-prototype/internal/logger"
-	"bvpn-prototype/internal/protocols/entity/block_data"
-	"bvpn-prototype/internal/protocols/hasher"
-	"bvpn-prototype/internal/storage/config"
+	"bvpn-prototype/internal/infrastructure/config"
+	"bvpn-prototype/internal/infrastructure/logger"
+	"bvpn-prototype/internal/protocol/entity/block_data"
+	"bvpn-prototype/internal/protocol/hasher"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"

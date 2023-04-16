@@ -2,7 +2,6 @@ package domain
 
 import (
 	"bvpn-prototype/internal/chain/api_out"
-	"bvpn-prototype/internal/chain/mempool"
 	"bvpn-prototype/internal/chain/storage"
 	"bvpn-prototype/internal/infrastructure/di"
 	"bvpn-prototype/internal/protocol"
@@ -24,6 +23,7 @@ type ChainService interface {
 type ChainServiceImpl struct {
 	chainRepo   ChainRepository
 	chainReader protocol.ChainReader
+	mempoolRepo MempoolRepository
 }
 
 func (s *ChainServiceImpl) GetUTXOs() ([]block_data.ChainStored, error) {
@@ -35,9 +35,9 @@ func (s *ChainServiceImpl) GetUTXOs() ([]block_data.ChainStored, error) {
 	return utxos, nil
 }
 
-func (*ChainServiceImpl) MakeNew(element block_data.ChainStored) (*block_data.ChainStored, error) {
+func (s *ChainServiceImpl) MakeNew(element block_data.ChainStored) (*block_data.ChainStored, error) {
 	protocol.PrepareEntity(&element)
-	mempool.AddNewElement(element) // todo
+	s.mempoolRepo.AddNewElement(element)
 
 	peers := di.Get("peer_public").(PeerPublicService).GetPeers(nil)
 	go api_out.BroadcastMempool(element, peers) // todo
@@ -71,7 +71,7 @@ func (s *ChainServiceImpl) UpdateChain() {
 	}
 }
 
-func (*ChainServiceImpl) AddToMempool(element block_data.ChainStored, from *entity.Node) error {
+func (s *ChainServiceImpl) AddToMempool(element block_data.ChainStored, from *entity.Node) error {
 	if element.Type == block_data.TypeOffer {
 		url := element.Data.(block_data.Offer).URL
 		node := entity.Node{
@@ -89,9 +89,8 @@ func (*ChainServiceImpl) AddToMempool(element block_data.ChainStored, from *enti
 	}
 
 	peers := di.Get("peer_public").(PeerPublicService).GetPeers(from)
-	// todo
-	if !mempool.IsExist(element.ID) {
-		mempool.AddNewElement(element)
+	if !s.mempoolRepo.IsExist(element.ID) {
+		s.mempoolRepo.AddNewElement(element)
 		go api_out.BroadcastMempool(element, peers)
 	}
 
@@ -118,7 +117,7 @@ func (s *ChainServiceImpl) AddBlock(block entity.Block, from *entity.Node) error
 	}
 
 	for _, datum := range block.Data {
-		mempool.RemoveByIndex(datum.ID)
+		s.mempoolRepo.RemoveByIndex(datum.ID)
 	}
 
 	if block.Next == signer.GetAddr() {
@@ -172,7 +171,7 @@ func (s *ChainServiceImpl) createNewBlock() error {
 		return err // todo: domain errors
 	}
 
-	data := mempool.GetElements(protocol.BlockCapacity)
+	data := s.mempoolRepo.GetElements(protocol.BlockCapacity)
 
 	newBlock, err := protocol.CreateNewBlock(*lastBlock, data)
 	if err != nil {
@@ -184,7 +183,7 @@ func (s *ChainServiceImpl) createNewBlock() error {
 	}
 
 	for _, datum := range data {
-		mempool.RemoveByIndex(datum.ID)
+		s.mempoolRepo.RemoveByIndex(datum.ID)
 	}
 
 	return nil
@@ -196,8 +195,14 @@ func NewChainService() (*ChainServiceImpl, error) {
 		return nil, err
 	}
 
+	mempoolRepo, err := storage.NewMempoolRepo()
+	if err != nil {
+		return nil, err
+	}
+
 	return &ChainServiceImpl{
 		chainRepo:   chainRepo,
 		chainReader: chainRepo,
+		mempoolRepo: mempoolRepo,
 	}, nil
 }

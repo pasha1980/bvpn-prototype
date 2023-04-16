@@ -1,8 +1,8 @@
 package hasher
 
 import (
-	"bvpn-prototype/internal/protocols/entity"
-	"bvpn-prototype/internal/protocols/entity/block_data"
+	"bvpn-prototype/internal/protocol/entity"
+	"bvpn-prototype/internal/protocol/entity/block_data"
 	"fmt"
 	"golang.org/x/crypto/sha3"
 	"sort"

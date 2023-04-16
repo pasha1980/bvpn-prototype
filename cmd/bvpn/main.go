@@ -10,15 +10,16 @@ import (
 	peer_domain "bvpn-prototype/internal/peer/domain"
 	"bvpn-prototype/internal/protocol/entity"
 	vpn_domain "bvpn-prototype/internal/vpn/domain"
+	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/sarulabs/di"
 	"gopkg.in/yaml.v3"
 	"os"
 )
 
-const defaultConfigFile = "config.yaml"
+const defaultConfigFile = "./config.yaml"
 
-var configFile = defaultConfigFile // todo: custom
+var configFile = defaultConfigFile
 
 func main() {
 	logger.Init()
@@ -33,13 +34,12 @@ func main() {
 
 	command := os.Args[1]
 	switch command {
-
-	case "run":
-	case "init":
+	case "init", "run":
 		cli.Init()
 		break
 
 	case "make":
+		fmt.Println(8)
 		switch os.Args[2] {
 
 		case "transaction":
