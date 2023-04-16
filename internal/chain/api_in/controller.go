@@ -3,8 +3,9 @@ package api_in
 import (
 	"bvpn-prototype/internal/chain/api_in/dto"
 	"bvpn-prototype/internal/chain/domain"
+	"bvpn-prototype/internal/infrastructure/common"
 	"bvpn-prototype/internal/infrastructure/di"
-	"bvpn-prototype/internal/infrastructure/http/http_errors"
+	"bvpn-prototype/internal/infrastructure/errors/http_errors"
 	"github.com/gofiber/fiber/v2"
 	"net/http"
 )
@@ -17,7 +18,7 @@ func (ChainController) AddTx(ctx *fiber.Ctx) error {
 
 	err := ctx.BodyParser(&tx)
 	if err != nil {
-		return http_errors.ErrorInvalidRequest
+		return http_errors.InvalidRequest(err.Error())
 	}
 
 	// todo: validation
@@ -28,9 +29,7 @@ func (ChainController) AddTx(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	return ctx.Status(http.StatusOK).JSON(map[string]bool{
-		"success": true,
-	})
+	return ctx.Status(http.StatusOK).JSON(common.MakeHttpPage(true))
 }
 
 func (ChainController) AddOffer(ctx *fiber.Ctx) error {
@@ -38,7 +37,7 @@ func (ChainController) AddOffer(ctx *fiber.Ctx) error {
 
 	err := ctx.BodyParser(&offer)
 	if err != nil {
-		return http_errors.ErrorInvalidRequest
+		return http_errors.InvalidRequest(err.Error())
 	}
 
 	// todo: validation
@@ -49,9 +48,7 @@ func (ChainController) AddOffer(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	return ctx.Status(http.StatusOK).JSON(map[string]bool{
-		"success": true,
-	})
+	return ctx.Status(http.StatusOK).JSON(common.MakeHttpPage(true))
 }
 
 func (ChainController) AddTraffic(ctx *fiber.Ctx) error {
@@ -59,7 +56,7 @@ func (ChainController) AddTraffic(ctx *fiber.Ctx) error {
 
 	err := ctx.BodyParser(&traffic)
 	if err != nil {
-		return http_errors.ErrorInvalidRequest
+		return http_errors.InvalidRequest(err.Error())
 	}
 
 	// todo: validation
@@ -70,9 +67,7 @@ func (ChainController) AddTraffic(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	return ctx.Status(http.StatusOK).JSON(map[string]bool{
-		"success": true,
-	})
+	return ctx.Status(http.StatusOK).JSON(common.MakeHttpPage(true))
 }
 
 func (ChainController) AddConnectionBreak(ctx *fiber.Ctx) error {
@@ -80,7 +75,7 @@ func (ChainController) AddConnectionBreak(ctx *fiber.Ctx) error {
 
 	err := ctx.BodyParser(&connectionBreak)
 	if err != nil {
-		return http_errors.ErrorInvalidRequest
+		return http_errors.InvalidRequest(err.Error())
 	}
 
 	// todo: validation
@@ -91,9 +86,7 @@ func (ChainController) AddConnectionBreak(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	return ctx.Status(http.StatusOK).JSON(map[string]bool{
-		"success": true,
-	})
+	return ctx.Status(http.StatusOK).JSON(common.MakeHttpPage(true))
 }
 
 func (ChainController) AddBlock(ctx *fiber.Ctx) error {
@@ -101,7 +94,7 @@ func (ChainController) AddBlock(ctx *fiber.Ctx) error {
 
 	err := ctx.BodyParser(&blockDto)
 	if err != nil {
-		return http_errors.ErrorInvalidRequest
+		return http_errors.InvalidRequest(err.Error())
 	}
 
 	// todo: validation
@@ -111,16 +104,14 @@ func (ChainController) AddBlock(ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return ctx.Status(http.StatusOK).JSON(map[string]bool{
-		"success": true,
-	})
+	return ctx.Status(http.StatusOK).JSON(common.MakeHttpPage(true))
 }
 
 func (ChainController) GetChain(ctx *fiber.Ctx) error {
 	var body map[string]int
 	err := ctx.BodyParser(&body)
 	if err != nil {
-		return http_errors.ErrorInvalidRequest
+		return http_errors.InvalidRequest(err.Error())
 	}
 
 	// todo: validation
@@ -141,7 +132,7 @@ func (ChainController) GetChain(ctx *fiber.Ctx) error {
 		TotalCount: len(blockDtos),
 	}
 
-	return ctx.Status(http.StatusOK).JSON(chainDto)
+	return ctx.Status(http.StatusOK).JSON(common.MakeHttpPage(chainDto))
 }
 
 func NewChainController() ChainController {

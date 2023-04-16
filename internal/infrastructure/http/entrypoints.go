@@ -2,10 +2,10 @@ package http
 
 import (
 	chain_api "bvpn-prototype/internal/chain/api_in"
-	"bvpn-prototype/internal/infrastructure/http/http_errors"
+	"bvpn-prototype/internal/infrastructure/errors"
+	"bvpn-prototype/internal/infrastructure/errors/http_errors"
 	peer_api "bvpn-prototype/internal/peer/api_in"
 	vpn_api "bvpn-prototype/internal/vpn/api_in"
-	"errors"
 	"github.com/gofiber/fiber/v2"
 	"reflect"
 	"strings"
@@ -30,7 +30,7 @@ func rpcHandle(ctx *fiber.Ctx, controller interface{}) error {
 	method := reflect.ValueOf(controller).MethodByName(methodName)
 
 	if !method.IsValid() {
-		return http_errors.ErrorMethodNotFound
+		return http_errors.MethodNotFoundHttpError("Method "+methodParam+" not found", nil)
 	}
 
 	in := make([]reflect.Value, 1)
@@ -41,5 +41,5 @@ func rpcHandle(ctx *fiber.Ctx, controller interface{}) error {
 		return nil
 	}
 
-	return errors.New(response.MethodByName("Error").Call([]reflect.Value{})[0].String())
+	return response.Interface().(errors.Error)
 }
