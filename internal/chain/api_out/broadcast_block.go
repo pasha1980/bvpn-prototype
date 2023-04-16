@@ -1,7 +1,7 @@
 package api_out
 
 import (
-	"bvpn-prototype/internal/chain/api_in/dto"
+	"bvpn-prototype/internal/chain/api_out/dto"
 	"bvpn-prototype/internal/protocol/entity"
 	"encoding/json"
 	"github.com/valyala/fasthttp"
