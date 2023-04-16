@@ -7,8 +7,9 @@ import (
 	"bvpn-prototype/internal/infrastructure/config"
 	internal_di "bvpn-prototype/internal/infrastructure/di"
 	"bvpn-prototype/internal/infrastructure/logger"
-	"bvpn-prototype/internal/peer/domain"
+	peer_domain "bvpn-prototype/internal/peer/domain"
 	"bvpn-prototype/internal/protocol/entity"
+	vpn_domain "bvpn-prototype/internal/vpn/domain"
 	"github.com/go-playground/validator/v10"
 	"github.com/sarulabs/di"
 	"gopkg.in/yaml.v3"
@@ -81,14 +82,28 @@ func setupDi() {
 	app.Add(di.Def{
 		Name: "peer_service",
 		Build: func(ctn di.Container) (interface{}, error) {
-			return domain.NewPeerService()
+			return peer_domain.NewPeerService()
 		},
 	})
 
 	app.Add(di.Def{
 		Name: "peer_public",
 		Build: func(ctn di.Container) (interface{}, error) {
-			return domain.NewPeerService()
+			return peer_domain.NewPeerService()
+		},
+	})
+
+	app.Add(di.Def{
+		Name: "vpn_public",
+		Build: func(ctn di.Container) (interface{}, error) {
+			return vpn_domain.NewVpnService()
+		},
+	})
+
+	app.Add(di.Def{
+		Name: "vpn_service",
+		Build: func(ctn di.Container) (interface{}, error) {
+			return vpn_domain.NewVpnService()
 		},
 	})
 

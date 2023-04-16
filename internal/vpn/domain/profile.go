@@ -1,7 +1,7 @@
-package storage
+package domain
 
 type Profile struct {
+	Id     string
 	PrvKey []byte
 	PubKey []byte
-	id     string
 }

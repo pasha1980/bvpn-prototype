@@ -99,6 +99,10 @@ func PrepareEntity(data *block_data.ChainStored) {
 	signer.Sign(data)
 }
 
+func InitKeys() {
+	signer.Init()
+}
+
 func whoIsNext() string {
 	// todo
 	return ""

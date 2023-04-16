@@ -4,6 +4,7 @@ import (
 	"bvpn-prototype/internal/infrastructure/config"
 	"bvpn-prototype/internal/infrastructure/di"
 	"bvpn-prototype/internal/infrastructure/http"
+	"bvpn-prototype/internal/protocol"
 	"bvpn-prototype/internal/protocol/entity/block_data"
 	"bvpn-prototype/internal/protocol/signer"
 	"fmt"
@@ -17,6 +18,7 @@ type CliService struct {
 
 func (*CliService) Init() {
 	if _, err := os.Stat("initiate"); err != nil {
+		protocol.InitKeys()
 
 		peerPublic := di.Get("peer_public").(PeerPublicService)
 		for _, peer := range config.Get().Peers {
