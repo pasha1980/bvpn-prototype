@@ -1,7 +1,7 @@
 package mempool
 
 import (
-	"bvpn-prototype/internal/protocols/entity/block_data"
+	"bvpn-prototype/internal/protocol/entity/block_data"
 )
 
 type pool struct {

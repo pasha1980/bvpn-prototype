@@ -1,9 +1,9 @@
 package api_out
 
 import (
-	"bvpn-prototype/internal/http/http_dto/mempool_data_dto"
-	"bvpn-prototype/internal/protocols/entity"
-	"bvpn-prototype/internal/protocols/entity/block_data"
+	"bvpn-prototype/internal/chain/api_out/dto"
+	"bvpn-prototype/internal/protocol/entity"
+	"bvpn-prototype/internal/protocol/entity/block_data"
 	"encoding/json"
 	"github.com/valyala/fasthttp"
 	"net/http"
@@ -16,16 +16,16 @@ func BroadcastMempool(stored block_data.ChainStored, nodes []entity.Node) {
 
 	switch stored.Type {
 	case block_data.TypeTransaction:
-		requestDto = mempool_data_dto.TransactionToDto(stored)
+		requestDto = dto.TransactionToDto(stored)
 		method = "/addTx"
 	case block_data.TypeOffer:
-		requestDto = mempool_data_dto.OfferToDto(stored)
+		requestDto = dto.OfferToDto(stored)
 		method = "/addOffer"
 	case block_data.TypeTraffic:
-		requestDto = mempool_data_dto.NodeStatusToDto(stored)
+		requestDto = dto.ConnectionBreakToDto(stored)
 		method = "/addTraffic"
 	case block_data.TypeConnectionBreak:
-		requestDto = mempool_data_dto.TrafficToDto(stored)
+		requestDto = dto.TrafficToDto(stored)
 		method = "/addConnectionBreak"
 	}
 

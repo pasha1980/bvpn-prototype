@@ -1,4 +1,4 @@
-package vpn_profile
+package storage
 
 type Profile struct {
 	PrvKey []byte

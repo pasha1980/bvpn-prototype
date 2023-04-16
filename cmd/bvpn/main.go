@@ -1,8 +1,9 @@
 package main
 
 import (
-	"bvpn-prototype/internal/cli/api"
-	"bvpn-prototype/internal/cli/domain"
+	chain_domain "bvpn-prototype/internal/chain/domain"
+	cli_api "bvpn-prototype/internal/cli/api"
+	cli_domain "bvpn-prototype/internal/cli/domain"
 	"bvpn-prototype/internal/infrastructure/config"
 	internal_di "bvpn-prototype/internal/infrastructure/di"
 	"bvpn-prototype/internal/infrastructure/logger"
@@ -18,16 +19,17 @@ const defaultConfigFile = "config.yaml"
 var configFile = defaultConfigFile // todo: custom
 
 func main() {
-	command := os.Args[1]
+	logger.Init()
+	setupDi()
+
 	_, err := parseConfig()
 	if err != nil {
 		panic(err)
 	}
 
-	logger.Init()
-	setupDi()
+	cli, _ := cli_api.NewCliApi()
 
-	cli := internal_di.Get("cli_api").(*api.CliApi)
+	command := os.Args[1]
 	switch command {
 
 	case "run":
@@ -55,16 +57,23 @@ func setupDi() {
 	app, _ := di.NewBuilder()
 
 	app.Add(di.Def{
-		Name: "cli_api",
+		Name: "cli_service",
 		Build: func(ctn di.Container) (interface{}, error) {
-			return api.NewCliApi()
+			return cli_domain.NewCliService()
 		},
 	})
 
 	app.Add(di.Def{
-		Name: "cli_service",
+		Name: "chain_service",
 		Build: func(ctn di.Container) (interface{}, error) {
-			return domain.NewCliService()
+			return chain_domain.NewChainService()
+		},
+	})
+
+	app.Add(di.Def{
+		Name: "chain_public",
+		Build: func(ctn di.Container) (interface{}, error) {
+			return chain_domain.NewChainService()
 		},
 	})
 

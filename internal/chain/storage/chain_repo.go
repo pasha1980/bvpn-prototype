@@ -1,24 +1,25 @@
-package chain
+package storage
 
 import (
-	"bvpn-prototype/internal/protocols/entity"
-	"bvpn-prototype/internal/protocols/entity/block_data"
-	"bvpn-prototype/internal/protocols/signer"
-	"bvpn-prototype/internal/storage/chain/models"
-	"bvpn-prototype/internal/storage/config"
+	"bvpn-prototype/internal/chain/storage/models"
+	"bvpn-prototype/internal/infrastructure/config"
+	"bvpn-prototype/internal/protocol/entity"
+	"bvpn-prototype/internal/protocol/entity/block_data"
+	"bvpn-prototype/internal/protocol/signer"
 	"errors"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"log"
 	"sort"
 )
 
-type ChainRepo struct {
+type ChainRepository struct {
 	db *gorm.DB
+
+	readerIndex uint64
 }
 
-func (r *ChainRepo) getData(block *entity.Block) error {
+func (r *ChainRepository) getData(block *entity.Block) error {
 	var data []block_data.ChainStored
 
 	var txs []models.Transaction
@@ -73,7 +74,7 @@ func (r *ChainRepo) getData(block *entity.Block) error {
 	return nil
 }
 
-func (r *ChainRepo) saveData(block *entity.Block) error {
+func (r *ChainRepository) saveData(block *entity.Block) error {
 	for _, data := range block.Data {
 		switch data.Type {
 		case block_data.TypeTransaction:
@@ -112,7 +113,7 @@ func (r *ChainRepo) saveData(block *entity.Block) error {
 	return nil
 }
 
-func (r *ChainRepo) GetLastBlock() (*entity.Block, error) {
+func (r *ChainRepository) GetLastBlock() (*entity.Block, error) {
 	var blockModel models.Block
 	err := r.db.Last(&blockModel).Error
 	if err != nil {
@@ -128,7 +129,7 @@ func (r *ChainRepo) GetLastBlock() (*entity.Block, error) {
 	return b, nil
 }
 
-func (r *ChainRepo) GetBlockByHash(hash string) (*entity.Block, error) {
+func (r *ChainRepository) GetBlockByHash(hash string) (*entity.Block, error) {
 	var blockModel models.Block
 	err := r.db.Where(&models.Block{
 		Hash: hash,
@@ -146,7 +147,7 @@ func (r *ChainRepo) GetBlockByHash(hash string) (*entity.Block, error) {
 	return b, nil
 }
 
-func (r *ChainRepo) GetBlockByNumber(number uint64) (*entity.Block, error) {
+func (r *ChainRepository) GetBlockByNumber(number uint64) (*entity.Block, error) {
 	var blockModel models.Block
 	err := r.db.Find(&blockModel, uint(number)).Error
 	if err != nil {
@@ -162,7 +163,7 @@ func (r *ChainRepo) GetBlockByNumber(number uint64) (*entity.Block, error) {
 	return b, nil
 }
 
-func (r *ChainRepo) GetChain(limit int, offset int) ([]entity.Block, error) {
+func (r *ChainRepository) GetChain(limit int, offset int) ([]entity.Block, error) {
 	var blockModels []models.Block
 	err := r.db.Limit(limit).Offset(offset).Find(&blockModels).Error
 	if err != nil {
@@ -183,7 +184,7 @@ func (r *ChainRepo) GetChain(limit int, offset int) ([]entity.Block, error) {
 	return blocks, nil
 }
 
-func (r *ChainRepo) SaveBlock(block entity.Block) (*entity.Block, error) {
+func (r *ChainRepository) SaveBlock(block entity.Block) (*entity.Block, error) {
 	model := models.BlockToModel(block)
 	err := r.db.Save(model).Error
 	if err != nil {
@@ -198,12 +199,12 @@ func (r *ChainRepo) SaveBlock(block entity.Block) (*entity.Block, error) {
 	return model.ModelToEntity(), err
 }
 
-func (r *ChainRepo) ReplaceChain(chain []entity.Block) error {
+func (r *ChainRepository) ReplaceChain(chain []entity.Block) error {
 	tx := r.db.Raw("truncate table `chain`;")
 
 	tx.Raw("truncate table `tx`;")
 	tx.Raw("truncate table `offer`;")
-	tx.Raw("truncate table `node_status`;")
+	tx.Raw("truncate table `connection_break`;")
 	tx.Raw("truncate table `traffic`;")
 
 	for _, block := range chain {
@@ -231,7 +232,7 @@ func (r *ChainRepo) ReplaceChain(chain []entity.Block) error {
 	return tx.Error
 }
 
-func (r *ChainRepo) GetMyUTXOs() ([]block_data.ChainStored, error) {
+func (r *ChainRepository) GetMyUTXOs() ([]block_data.ChainStored, error) {
 	var utxos []block_data.ChainStored
 	var utxoModels []models.Transaction
 
@@ -249,22 +250,53 @@ func (r *ChainRepo) GetMyUTXOs() ([]block_data.ChainStored, error) {
 	return utxos, nil
 }
 
-func NewChainRepo() *ChainRepo {
+func (r *ChainRepository) Start() {
+	r.readerIndex = 1
+}
+
+func (r *ChainRepository) Next() *entity.Block {
+	r.readerIndex++
+	lastBlock, _ := r.GetLastBlock() // todo: errors
+	if r.readerIndex > lastBlock.Number {
+		return nil
+	}
+
+	block, _ := r.GetBlockByNumber(r.readerIndex) // todo: errors
+	return block
+}
+
+func (r *ChainRepository) Last() *entity.Block {
+	block, _ := r.GetLastBlock() // todo: errors
+	return block
+}
+
+func (r *ChainRepository) Len() int64 {
+	var count int64
+	r.db.Model(&models.Block{}).Count(&count)
+	return count
+}
+
+func NewChainRepo() (*ChainRepository, error) {
 	db, err := gorm.Open(sqlite.Open(config.Get().StorageDirectory+"/chain.db"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	db.AutoMigrate(&models.Block{})
-	db.AutoMigrate(&models.Transaction{})
-	db.AutoMigrate(&models.Traffic{})
-	db.AutoMigrate(&models.ConnectionBreak{})
-	db.AutoMigrate(&models.Offer{})
+	err = db.AutoMigrate(&models.Block{})
+	err = db.AutoMigrate(&models.Transaction{})
+	err = db.AutoMigrate(&models.Traffic{})
+	err = db.AutoMigrate(&models.ConnectionBreak{})
+	err = db.AutoMigrate(&models.Offer{})
 
-	return &ChainRepo{
-		db: db,
+	if err != nil {
+		return nil, err
 	}
+
+	return &ChainRepository{
+		db:          db,
+		readerIndex: 1,
+	}, nil
 }

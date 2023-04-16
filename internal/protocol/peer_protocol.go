@@ -1,4 +1,4 @@
-package protocols
+package protocol
 
 import (
 	"bvpn-prototype/internal/protocols/entity"

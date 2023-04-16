@@ -1,7 +1,7 @@
 package models
 
 import (
-	"bvpn-prototype/internal/protocols/entity"
+	"bvpn-prototype/internal/protocol/entity"
 	"time"
 )
 

@@ -1,8 +1,8 @@
 package api_out
 
 import (
-	"bvpn-prototype/internal/http/http_dto"
-	"bvpn-prototype/internal/protocols/entity"
+	"bvpn-prototype/internal/chain/api_in/dto"
+	"bvpn-prototype/internal/protocol/entity"
 	"encoding/json"
 	"github.com/valyala/fasthttp"
 	"net/http"
@@ -11,7 +11,7 @@ import (
 
 func BroadcastBlock(block entity.Block, nodes []entity.Node) {
 	method := "/addBlock"
-	body, _ := json.Marshal(http_dto.BlockToDto(block))
+	body, _ := json.Marshal(dto.BlockToDto(block))
 
 	for _, node := range nodes {
 		req := fasthttp.AcquireRequest()

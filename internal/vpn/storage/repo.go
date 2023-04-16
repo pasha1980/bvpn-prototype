@@ -1,4 +1,4 @@
-package vpn_profile
+package storage
 
 import (
 	"bvpn-prototype/internal/storage/config"

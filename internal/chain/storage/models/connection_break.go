@@ -1,7 +1,7 @@
 package models
 
 import (
-	"bvpn-prototype/internal/protocols/entity/block_data"
+	"bvpn-prototype/internal/protocol/entity/block_data"
 	"github.com/google/uuid"
 	"time"
 )

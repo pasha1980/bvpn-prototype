@@ -1,8 +1,8 @@
 package vpn
 
 import (
-	"bvpn-prototype/internal/storage/vpn_profile"
-	utils2 "bvpn-prototype/utils"
+	"bvpn-prototype/internal/vpn/storage"
+	"bvpn-prototype/utils"
 	"fmt"
 	"github.com/songgao/water"
 	"net"
@@ -16,7 +16,7 @@ todo: Encryption - decryption
 */
 
 func Init(port string, proto string) error {
-	err := vpn_profile.InitStorage()
+	err := storage.InitStorage()
 	if err != nil {
 		return err // todo
 	}
@@ -26,7 +26,7 @@ func Init(port string, proto string) error {
 		return err // todo
 	}
 
-	listener, err = net.Listen(proto, utils2.MyIP()+":"+port)
+	listener, err = net.Listen(proto, utils.MyIP()+":"+port)
 	if err != nil {
 		return err // todo
 	}
@@ -46,12 +46,12 @@ func createTun() (*water.Interface, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = utils2.Exec(fmt.Sprintf("sudo ip addr add 0.0.0.0/0 dev %s", iface.Name()))
+	_, err = utils.Exec(fmt.Sprintf("sudo ip addr add 0.0.0.0/0 dev %s", iface.Name()))
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = utils2.Exec(fmt.Sprintf("sudo ip link set dev %s up", iface.Name()))
+	_, err = utils.Exec(fmt.Sprintf("sudo ip link set dev %s up", iface.Name()))
 	if err != nil {
 		return nil, err
 	}

@@ -71,7 +71,7 @@ func (*CliService) MakeTx(to string, amount float64) {
 	var sum float64
 	for _, utxo := range utxos {
 		if utxo.Data.(block_data.Transaction).Amount >= amount {
-			tx, _ := chainPublic.NewEntity(block_data.ChainStored{
+			tx, _ := chainPublic.MakeNew(block_data.ChainStored{
 				Type: block_data.TypeTransaction,
 				Data: block_data.Transaction{
 					From:   utxo.ID.String(),
@@ -82,7 +82,7 @@ func (*CliService) MakeTx(to string, amount float64) {
 			fmt.Println(tx)
 
 			if utxo.Data.(block_data.Transaction).Amount != amount {
-				toMe, _ := chainPublic.NewEntity(block_data.ChainStored{
+				toMe, _ := chainPublic.MakeNew(block_data.ChainStored{
 					Type: block_data.TypeTransaction,
 					Data: block_data.Transaction{
 						From:   utxo.ID.String(),
@@ -105,7 +105,7 @@ func (*CliService) MakeTx(to string, amount float64) {
 	for _, utxo := range validForTx {
 		utxoAmount := utxo.Data.(block_data.Transaction).Amount
 		if sum > utxoAmount {
-			tx, _ := chainPublic.NewEntity(block_data.ChainStored{
+			tx, _ := chainPublic.MakeNew(block_data.ChainStored{
 				Type: block_data.TypeTransaction,
 				Data: block_data.Transaction{
 					From:   utxo.ID.String(),
@@ -115,7 +115,7 @@ func (*CliService) MakeTx(to string, amount float64) {
 			})
 			fmt.Println(tx) // todo
 		} else {
-			tx, _ := chainPublic.NewEntity(block_data.ChainStored{
+			tx, _ := chainPublic.MakeNew(block_data.ChainStored{
 				Type: block_data.TypeTransaction,
 				Data: block_data.Transaction{
 					From:   utxo.ID.String(),
@@ -125,7 +125,7 @@ func (*CliService) MakeTx(to string, amount float64) {
 			})
 			fmt.Println(tx) // todo
 
-			toMe, _ := chainPublic.NewEntity(block_data.ChainStored{
+			toMe, _ := chainPublic.MakeNew(block_data.ChainStored{
 				Type: block_data.TypeTransaction,
 				Data: block_data.Transaction{
 					From:   utxo.ID.String(),
@@ -141,7 +141,7 @@ func (*CliService) MakeTx(to string, amount float64) {
 
 func (*CliService) MakeOffer(price float64) {
 	chainPublic := di.Get("chain_public").(ChainPublicService)
-	offer, err := chainPublic.NewEntity(block_data.ChainStored{
+	offer, err := chainPublic.MakeNew(block_data.ChainStored{
 		Type: block_data.TypeOffer,
 		Data: block_data.Offer{
 			URL:       config.Get().URL,

@@ -1,8 +1,8 @@
 package mempool
 
 import (
-	"bvpn-prototype/internal/protocols/entity/block_data"
-	"bvpn-prototype/internal/storage/config"
+	"bvpn-prototype/internal/infrastructure/config"
+	"bvpn-prototype/internal/protocol/entity/block_data"
 	utils2 "bvpn-prototype/utils"
 	"encoding/base64"
 	"encoding/json"

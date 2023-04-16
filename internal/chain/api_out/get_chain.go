@@ -1,8 +1,8 @@
 package api_out
 
 import (
-	"bvpn-prototype/internal/http/http_dto"
-	"bvpn-prototype/internal/protocols/entity"
+	"bvpn-prototype/internal/chain/api_out/dto"
+	"bvpn-prototype/internal/protocol/entity"
 	"encoding/json"
 	"github.com/valyala/fasthttp"
 	"net/http"
@@ -38,19 +38,19 @@ func GetFullChain(node entity.Node) []entity.Block {
 			continue
 		}
 
-		var dto http_dto.ChainDto
-		err := json.Unmarshal(res.Body(), &dto)
+		var d dto.ChainDto
+		err := json.Unmarshal(res.Body(), &d)
 		if err != nil {
 			continue
 		}
 
 		fasthttp.ReleaseResponse(res)
 
-		for _, blockDto := range dto.Chain {
+		for _, blockDto := range d.Chain {
 			chain = append(chain, blockDto.ToEntity())
 		}
 
-		if dto.TotalCount < maxBufferSize {
+		if d.TotalCount < maxBufferSize {
 			break
 		}
 
