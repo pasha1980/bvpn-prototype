@@ -12,7 +12,7 @@ func GetFullChain(node entity.Node) []entity.Block {
 	var chain []entity.Block
 
 	const maxBufferSize = 50
-	const method = "/getChain"
+	const method = "/chain/getChain"
 
 	offset := 0
 	limit := maxBufferSize

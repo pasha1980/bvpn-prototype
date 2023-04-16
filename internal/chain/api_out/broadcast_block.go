@@ -10,7 +10,7 @@ import (
 )
 
 func BroadcastBlock(block entity.Block, nodes []entity.Node) {
-	method := "/addBlock"
+	method := "/chain/addBlock"
 	body, _ := json.Marshal(dto.BlockToDto(block))
 
 	for _, node := range nodes {

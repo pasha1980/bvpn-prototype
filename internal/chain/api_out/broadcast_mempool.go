@@ -17,16 +17,16 @@ func BroadcastMempool(stored block_data.ChainStored, nodes []entity.Node) {
 	switch stored.Type {
 	case block_data.TypeTransaction:
 		requestDto = dto.TransactionToDto(stored)
-		method = "/addTx"
+		method = "/chain/addTx"
 	case block_data.TypeOffer:
 		requestDto = dto.OfferToDto(stored)
-		method = "/addOffer"
+		method = "/chain/addOffer"
 	case block_data.TypeTraffic:
 		requestDto = dto.ConnectionBreakToDto(stored)
-		method = "/addTraffic"
+		method = "/chain/addTraffic"
 	case block_data.TypeConnectionBreak:
 		requestDto = dto.TrafficToDto(stored)
-		method = "/addConnectionBreak"
+		method = "/chain/addConnectionBreak"
 	}
 
 	for _, node := range nodes {
