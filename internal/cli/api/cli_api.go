@@ -19,11 +19,14 @@ func (a *CliApi) Init() {
 
 	_, err := flags.Parse(&opts)
 	if err != nil {
-		panic(err)
+		handle(err)
 	}
 
 	cliService := di.Get("cli_service").(*domain.CliService)
-	cliService.Init()
+	err = cliService.Init()
+	if err != nil {
+		handle(err)
+	}
 
 	if !opts.Detached {
 		ctlc := make(chan os.Signal)
@@ -41,11 +44,14 @@ func (*CliApi) MakeTx() {
 
 	_, err := flags.Parse(&opts)
 	if err != nil {
-		panic(err)
+		handle(err)
 	}
 
 	cliService := di.Get("cli_service").(*domain.CliService)
-	cliService.MakeTx(opts.To, opts.Amount)
+	err = cliService.MakeTx(opts.To, opts.Amount)
+	if err != nil {
+		handle(err)
+	}
 }
 
 func (a *CliApi) MakeOffer() {
@@ -55,11 +61,14 @@ func (a *CliApi) MakeOffer() {
 
 	_, err := flags.Parse(&opts)
 	if err != nil {
-		panic(err)
+		handle(err)
 	}
 
 	cliService := di.Get("cli_service").(*domain.CliService)
-	cliService.MakeOffer(opts.Price)
+	err = cliService.MakeOffer(opts.Price)
+	if err != nil {
+		handle(err)
+	}
 }
 
 func NewCliApi() (*CliApi, error) {

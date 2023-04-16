@@ -3,6 +3,7 @@ package errors
 import (
 	"bvpn-prototype/internal/infrastructure/logger"
 	"fmt"
+	"strconv"
 )
 
 type ErrorType string
@@ -24,7 +25,7 @@ var layers = map[string]string{
 }
 
 func (e Error) Layer() string {
-	code := fmt.Sprintf("%04d", e.Code)
+	code := strconv.Itoa(e.Code)
 	layer, ok := layers[code[1:2]]
 	if !ok {
 		return "undefined"
@@ -38,10 +39,11 @@ var domains = map[string]string{
 	"1": "CHAIN",
 	"2": "PEER",
 	"3": "VPN",
+	"4": "CLI",
 }
 
 func (e Error) Domain() string {
-	code := fmt.Sprintf("%04d", e.Code)
+	code := strconv.Itoa(e.Code)
 
 	domain, ok := domains[code[2:3]]
 	if !ok {
@@ -57,7 +59,7 @@ var levels = map[string]string{
 }
 
 func (e Error) Level() string {
-	code := fmt.Sprintf("%04d", e.Code)
+	code := strconv.Itoa(e.Code)
 	level, ok := levels[code[3:4]]
 	if !ok {
 		return "UNDEFINED"
@@ -66,8 +68,8 @@ func (e Error) Level() string {
 }
 
 func (e Error) Log() {
-	code := fmt.Sprintf("%04d", e.Code)
-	if code[3:4] == "0" {
+	code := strconv.Itoa(e.Code)
+	if code[4:5] == "0" {
 		return
 	}
 
