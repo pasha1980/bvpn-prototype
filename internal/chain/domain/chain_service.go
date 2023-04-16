@@ -17,6 +17,8 @@ type ChainService interface {
 	AddToMempool(entity block_data.ChainStored, from *entity.Node) error
 	AddBlock(block entity.Block, from *entity.Node) error
 	GetChain(limit int, offset int) ([]entity.Block, error)
+	ValidateStoredChain()
+	UpdateChain()
 }
 
 type ChainServiceImpl struct {
