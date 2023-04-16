@@ -5,7 +5,7 @@ import (
 )
 
 type PeerDto struct {
-	URL string `json:"url"`
+	URL string `json:"url" validate:"url"`
 	// todo
 }
 

@@ -75,11 +75,12 @@ func (e Error) Log() {
 
 	logger.LogError(
 		fmt.Sprintf(
-			"[%s - %s] D:%s %s",
+			"[%s - %s] D:%s %s  %s",
 			e.Level(),
 			e.Layer(),
 			e.Domain(),
 			string(e.Type),
+			e.Data,
 		),
 	)
 }

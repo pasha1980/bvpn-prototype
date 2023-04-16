@@ -1,6 +1,7 @@
 package api
 
 func handle(err error) {
+	// todo
 	//var message string
 	//var errorCode int
 	//var data any

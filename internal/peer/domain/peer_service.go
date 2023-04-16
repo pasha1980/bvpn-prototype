@@ -2,6 +2,7 @@ package domain
 
 import (
 	"bvpn-prototype/internal/peer/api_out"
+	"bvpn-prototype/internal/peer/errors"
 	"bvpn-prototype/internal/peer/storage"
 	"bvpn-prototype/internal/protocol"
 	"bvpn-prototype/internal/protocol/entity"
@@ -56,7 +57,7 @@ func (p *PeerServiceImpl) CheckPeers() {
 func (*PeerServiceImpl) validatePeer(peer entity.Node) error {
 	ok := api_out.HealthCheck(peer)
 	if !ok {
-		// todo: domain errors
+		return errors.PeerNotAvailable(peer)
 	}
 
 	return protocol.ValidatePeer(peer)

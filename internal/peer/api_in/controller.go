@@ -6,6 +6,7 @@ import (
 	"bvpn-prototype/internal/infrastructure/errors/http_errors"
 	"bvpn-prototype/internal/peer/api_in/dto"
 	"bvpn-prototype/internal/peer/domain"
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"net/http"
 )
@@ -21,6 +22,10 @@ func (c PeerController) AddPeer(ctx *fiber.Ctx) error {
 	var body dto.PeerDto
 	err := ctx.BodyParser(&body)
 	if err != nil {
+		return http_errors.InvalidRequest(err.Error())
+	}
+
+	if err = validator.New().Struct(body); err != nil {
 		return http_errors.InvalidRequest(err.Error())
 	}
 
