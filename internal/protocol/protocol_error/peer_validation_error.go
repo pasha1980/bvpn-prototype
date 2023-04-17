@@ -1,10 +1,11 @@
 package protocol_error
 
-const PeerValidationErrorCode ErrorCode = 5
+import "bvpn-prototype/internal/infrastructure/errors"
 
-func PeerValidationError(message string) *Error {
-	return &Error{
-		Code:    PeerValidationErrorCode,
-		Message: message,
+func PeerValidationError(message string) errors.Error {
+	return errors.Error{
+		Code: 12001,
+		Type: "PeerValidationError",
+		Data: message,
 	}
 }
