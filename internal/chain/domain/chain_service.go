@@ -2,8 +2,10 @@ package domain
 
 import (
 	"bvpn-prototype/internal/chain/api_out"
+	chain_errors "bvpn-prototype/internal/chain/errors"
 	"bvpn-prototype/internal/chain/storage"
 	"bvpn-prototype/internal/infrastructure/di"
+	"bvpn-prototype/internal/infrastructure/errors"
 	"bvpn-prototype/internal/protocol"
 	"bvpn-prototype/internal/protocol/entity"
 	"bvpn-prototype/internal/protocol/entity/block_data"
@@ -29,7 +31,7 @@ type ChainServiceImpl struct {
 func (s *ChainServiceImpl) GetUTXOs() ([]block_data.ChainStored, error) {
 	utxos, err := s.chainRepo.GetMyUTXOs()
 	if err != nil {
-		return nil, err // todo: domain errors
+		return nil, errors.StorageError(err.Error())
 	}
 
 	return utxos, nil
@@ -66,7 +68,7 @@ func (s *ChainServiceImpl) UpdateChain() {
 
 		err = s.replaceChain(peerChain)
 		if err != nil {
-			continue
+			errors.StorageError(err.Error()).Log()
 		}
 	}
 }
@@ -130,7 +132,7 @@ func (s *ChainServiceImpl) AddBlock(block entity.Block, from *entity.Node) error
 func (s *ChainServiceImpl) GetChain(limit *int, offset *int) ([]entity.Block, error) {
 	c, err := s.chainRepo.GetChain(limit, offset)
 	if err != nil {
-		return nil, err // todo: domain errors
+		return nil, errors.StorageError(err.Error())
 	}
 
 	return c, nil
@@ -139,7 +141,7 @@ func (s *ChainServiceImpl) GetChain(limit *int, offset *int) ([]entity.Block, er
 func (s *ChainServiceImpl) ValidateStoredChain() {
 	err := protocol.ValidateChain(s.chainReader)
 	if err != nil {
-		// todo: what to do
+		err.(errors.Error).Log()
 	}
 }
 
@@ -151,7 +153,7 @@ func (s *ChainServiceImpl) replaceChain(chain []entity.Block) error {
 
 	err = s.chainRepo.ReplaceChain(chain)
 	if err != nil {
-		return err // todo: domain errors
+		return errors.StorageError(err.Error())
 	}
 
 	return nil
@@ -167,8 +169,12 @@ func (*ChainServiceImpl) validateBlock(block entity.Block, previousBlock *entity
 
 func (s *ChainServiceImpl) createNewBlock() error {
 	lastBlock, err := s.chainRepo.GetLastBlock()
-	if err != nil || lastBlock == nil {
-		return err // todo: domain errors
+	if err != nil {
+		return errors.StorageError(err.Error())
+	}
+
+	if lastBlock == nil {
+		return chain_errors.EmptyChainError()
 	}
 
 	data := s.mempoolRepo.GetElements(protocol.BlockCapacity)
@@ -179,7 +185,7 @@ func (s *ChainServiceImpl) createNewBlock() error {
 	}
 
 	if err = s.AddBlock(*newBlock, nil); err != nil {
-		return err
+		return errors.StorageError(err.Error())
 	}
 
 	for _, datum := range data {
@@ -192,12 +198,12 @@ func (s *ChainServiceImpl) createNewBlock() error {
 func NewChainService() (*ChainServiceImpl, error) {
 	chainRepo, err := storage.NewChainRepo()
 	if err != nil {
-		return nil, err
+		return nil, errors.StorageError(err.Error())
 	}
 
 	mempoolRepo, err := storage.NewMempoolRepo()
 	if err != nil {
-		return nil, err
+		return nil, errors.StorageError(err.Error())
 	}
 
 	return &ChainServiceImpl{
