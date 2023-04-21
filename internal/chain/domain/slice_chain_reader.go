@@ -30,6 +30,15 @@ func (r *SliceChainReader) Last() *entity.Block {
 	return &block
 }
 
+func (r *SliceChainReader) Previous(number uint64) *entity.Block {
+	if len(r.slice) == 0 {
+		return nil
+	}
+
+	block := r.slice[number-1]
+	return &block
+}
+
 func (r *SliceChainReader) Len() int64 {
 	return int64(len(r.slice))
 }

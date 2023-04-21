@@ -3,10 +3,11 @@ package block_validators
 import (
 	"bvpn-prototype/internal/protocol/entity"
 	"bvpn-prototype/internal/protocol/entity/block_data"
+	"bvpn-prototype/internal/protocol/interfaces"
 	"bvpn-prototype/internal/protocol/protocol_error"
 )
 
-func typeValidation(block entity.Block, previousBlock *entity.Block) error {
+func typeValidation(block entity.Block, reader interfaces.ChainReader) error {
 	for _, data := range block.Data {
 		switch data.Type {
 		case block_data.TypeTransaction:
@@ -31,7 +32,7 @@ func typeValidation(block entity.Block, previousBlock *entity.Block) error {
 				return protocol_error.BlockValidationError("Invalid traffic #"+data.ID.String(), block.Number)
 			}
 		default:
-			return protocol_error.BlockValidationError("Unsupported data type", block.Number)
+			return nil
 		}
 	}
 

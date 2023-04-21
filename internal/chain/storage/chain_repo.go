@@ -289,6 +289,11 @@ func (r *ChainRepository) Last() *entity.Block {
 	return block
 }
 
+func (r *ChainRepository) Previous(number uint64) *entity.Block {
+	block, _ := r.GetBlockByNumber(number - 1)
+	return block
+}
+
 func (r *ChainRepository) Len() int64 {
 	var count int64
 	r.db.Model(&models.Block{}).Count(&count)

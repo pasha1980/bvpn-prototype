@@ -3,12 +3,13 @@ package block_validators
 import (
 	"bvpn-prototype/internal/protocol/entity"
 	"bvpn-prototype/internal/protocol/entity/block_data"
+	"bvpn-prototype/internal/protocol/interfaces"
 	"bvpn-prototype/internal/protocol/protocol_error"
 	"bvpn-prototype/internal/protocol/validators/node_validators"
 	"bvpn-prototype/utils"
 )
 
-func offerValidation(block entity.Block, previousBlock *entity.Block) error {
+func offerValidation(block entity.Block, reader interfaces.ChainReader) error {
 	for _, data := range block.Data {
 		if data.Type != block_data.TypeOffer {
 			continue

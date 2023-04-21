@@ -2,13 +2,13 @@ package domain
 
 import (
 	"bvpn-prototype/internal/chain/api_out"
-	chain_errors "bvpn-prototype/internal/chain/errors"
 	"bvpn-prototype/internal/chain/storage"
 	"bvpn-prototype/internal/infrastructure/di"
 	"bvpn-prototype/internal/infrastructure/errors"
 	"bvpn-prototype/internal/protocol"
 	"bvpn-prototype/internal/protocol/entity"
 	"bvpn-prototype/internal/protocol/entity/block_data"
+	"bvpn-prototype/internal/protocol/interfaces"
 	"bvpn-prototype/internal/protocol/signer"
 	"bvpn-prototype/internal/protocol/validators/node_validators"
 	"bvpn-prototype/utils"
@@ -24,7 +24,7 @@ type ChainService interface {
 
 type ChainServiceImpl struct {
 	chainRepo   ChainRepository
-	chainReader protocol.ChainReader
+	chainReader interfaces.ChainReader
 	mempoolRepo MempoolRepository
 }
 
@@ -100,12 +100,7 @@ func (s *ChainServiceImpl) AddToMempool(element block_data.ChainStored, from *en
 }
 
 func (s *ChainServiceImpl) AddBlock(block entity.Block, from *entity.Node) error {
-	lastBlock, err := s.chainRepo.GetLastBlock()
-	if err != nil {
-		return err // todo: domain error
-	}
-
-	err = s.validateBlock(block, lastBlock) // todo: what if initial
+	err := s.validateBlock(block)
 	if err != nil {
 		return err
 	}
@@ -186,23 +181,14 @@ func (*ChainServiceImpl) validateChain(chain []entity.Block) error {
 	return protocol.ValidateChain(NewSliceChainReader(chain))
 }
 
-func (*ChainServiceImpl) validateBlock(block entity.Block, previousBlock *entity.Block) error {
-	return protocol.ValidateBlock(block, previousBlock)
+func (s *ChainServiceImpl) validateBlock(block entity.Block) error {
+	return protocol.ValidateBlock(block, s.chainReader)
 }
 
 func (s *ChainServiceImpl) createNewBlock() error {
-	lastBlock, err := s.chainRepo.GetLastBlock()
-	if err != nil {
-		return errors.StorageError(err.Error())
-	}
-
-	if lastBlock == nil {
-		return chain_errors.EmptyChainError()
-	}
-
 	data := s.mempoolRepo.GetElements(protocol.BlockCapacity)
 
-	newBlock, err := protocol.CreateNewBlock(*lastBlock, data)
+	newBlock, err := protocol.CreateNewBlock(s.chainReader, data)
 	if err != nil {
 		return err
 	}

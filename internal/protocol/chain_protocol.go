@@ -4,6 +4,7 @@ import (
 	"bvpn-prototype/internal/protocol/entity"
 	"bvpn-prototype/internal/protocol/entity/block_data"
 	"bvpn-prototype/internal/protocol/hasher"
+	"bvpn-prototype/internal/protocol/interfaces"
 	"bvpn-prototype/internal/protocol/signer"
 	"bvpn-prototype/internal/protocol/validators/block_validators"
 	"github.com/google/uuid"
@@ -13,14 +14,13 @@ import (
 const BlockCapacity = 1048576
 const TimeToWait = 10 * time.Second
 
-func ValidateChain(reader ChainReader) error {
+func ValidateChain(reader interfaces.ChainReader) error {
 	block := reader.Last()
 	if block == nil {
 		// todo
 	}
 
 	reader.Start()
-	previousBlock := reader.Next()
 
 	for {
 		block = reader.Next()
@@ -28,12 +28,10 @@ func ValidateChain(reader ChainReader) error {
 			break
 		}
 
-		err := ValidateBlock(*block, previousBlock)
+		err := ValidateBlock(*block, reader)
 		if err != nil {
 			return err
 		}
-
-		previousBlock = block
 	}
 
 	return nil
@@ -62,31 +60,31 @@ func AddInitialBlock() error {
 	return nil
 }
 
-func ValidateBlock(block entity.Block, previousBlock *entity.Block) error {
+func ValidateBlock(block entity.Block, chainReader interfaces.ChainReader) error {
 	var err error
 
 	for _, validator := range block_validators.GetValidationRules() {
-		err = validator(block, previousBlock)
+		err = validator(block, chainReader)
 	}
 
 	return err
 }
 
-func CreateNewBlock(previousBlock entity.Block, data []block_data.ChainStored) (*entity.Block, error) {
-
-	waitUntilMyTurn(previousBlock.TimeStamp)
+func CreateNewBlock(chainReader interfaces.ChainReader, data []block_data.ChainStored) (*entity.Block, error) {
+	lastBlock := chainReader.Last()
+	waitUntilMyTurn(lastBlock.TimeStamp)
 
 	newBlock := entity.Block{
-		Number:       previousBlock.Number + 1,
-		PreviousHash: previousBlock.PreviousHash,
+		Number:       lastBlock.Number + 1,
+		PreviousHash: lastBlock.PreviousHash,
 		Data:         data,
 		TimeStamp:    time.Now(),
 		CreatedBy:    signer.GetAddr(),
-		Next:         whoIsNext(),
+		Next:         whoIsNext(chainReader),
 	}
 	newBlock.Hash = hasher.EncryptBlock(newBlock)
 
-	err := ValidateBlock(newBlock, &previousBlock)
+	err := ValidateBlock(newBlock, chainReader)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +109,7 @@ func GetMyPubKey() string {
 	return signer.GetPubKey()
 }
 
-func whoIsNext() string {
+func whoIsNext(reader interfaces.ChainReader) string {
 	// todo
 	return ""
 }
