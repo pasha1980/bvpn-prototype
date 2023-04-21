@@ -8,6 +8,8 @@ import (
 	"bvpn-prototype/internal/protocol/signer"
 	"bvpn-prototype/internal/protocol/validators/block_validators"
 	"github.com/google/uuid"
+	"math"
+	"math/rand"
 	"time"
 )
 
@@ -89,6 +91,8 @@ func CreateNewBlock(chainReader interfaces.ChainReader, data []block_data.ChainS
 		return nil, err
 	}
 
+	// todo: what if chain stopped
+
 	return &newBlock, nil
 }
 
@@ -110,8 +114,93 @@ func GetMyPubKey() string {
 }
 
 func whoIsNext(reader interfaces.ChainReader) string {
-	// todo
-	return ""
+	rand.Seed(time.Now().Unix())
+
+	block := reader.Last()
+	if block == nil {
+		return signer.GetAddr()
+	}
+
+	nodesTr := getLastTraffics(reader)
+
+	var priorityList []string
+	for addr, traffic := range nodesTr {
+		for i := 0; i < traffic; i++ {
+			priorityList = append(priorityList, addr)
+		}
+	}
+
+	return priorityList[rand.Intn(len(priorityList))]
+}
+
+func getLastConnectionBreaks(reader interfaces.ChainReader) map[string]int {
+	block := reader.Last()
+	var connectionBreaks map[string]int
+	breaksBorder := time.Now().Add(-1 * 30 * 24 * time.Hour)
+	for {
+		if block.TimeStamp.Before(breaksBorder) {
+			break
+		}
+
+		for _, data := range block.Data {
+			if data.Type != block_data.TypeConnectionBreak {
+				continue
+			}
+
+			cb := data.Data.(*block_data.ConnectionBreak)
+			savedCB, ok := connectionBreaks[cb.Node]
+			if !ok {
+				connectionBreaks[cb.Node] = 1
+			} else {
+				connectionBreaks[cb.Node] = savedCB + 1
+			}
+		}
+
+		block = reader.Previous(block.Number)
+	}
+
+	return connectionBreaks
+}
+
+func getLastTraffics(reader interfaces.ChainReader) map[string]int {
+	connectionBreaks := getLastConnectionBreaks(reader)
+
+	block := reader.Last()
+	var nodesTr map[string]int
+	border := time.Now().Add(-1 * 10 * 24 * time.Hour)
+	for {
+		if block.TimeStamp.Before(border) {
+			break
+		}
+
+		for _, data := range block.Data {
+			if data.Type != block_data.TypeTraffic {
+				continue
+			}
+
+			traffic := data.Data.(*block_data.Traffic)
+			gb := int(math.Ceil(traffic.Bytes / 1073741824))
+			savedTr, ok := nodesTr[traffic.Node]
+			if !ok {
+				nodesTr[traffic.Node] = gb
+			} else {
+				nodesTr[traffic.Node] = savedTr + gb
+			}
+		}
+
+		block = reader.Previous(block.Number)
+	}
+
+	for addr, traffic := range nodesTr {
+		degree, ok := connectionBreaks[addr]
+		if ok {
+			denominator := int(math.Pow(2, float64(degree)))
+			nodesTr[addr] = traffic / denominator
+		}
+
+	}
+
+	return nodesTr
 }
 
 func waitUntilMyTurn(previousBlockTime time.Time) {
