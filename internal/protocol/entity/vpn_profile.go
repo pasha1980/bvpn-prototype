@@ -7,6 +7,7 @@ import (
 
 type Profile struct {
 	Id     uuid.UUID
+	Client string
 	Offer  block_data.Offer
 	PrvKey []byte
 	PubKey []byte

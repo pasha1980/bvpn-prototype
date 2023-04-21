@@ -158,6 +158,16 @@ func (s *ChainServiceImpl) GetMyLastOffer() (*block_data.Offer, error) {
 	return data.Data.(*block_data.Offer), nil
 }
 
+func (s *ChainServiceImpl) SaveTraffic(traffic block_data.Traffic) error {
+	element := block_data.ChainStored{
+		Data: traffic,
+		Type: block_data.TypeTraffic,
+	}
+
+	_, err := s.MakeNew(element)
+	return err
+}
+
 func (s *ChainServiceImpl) replaceChain(chain []entity.Block) error {
 	err := s.validateChain(chain)
 	if err != nil {

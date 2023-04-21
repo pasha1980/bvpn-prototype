@@ -27,7 +27,7 @@ func typeValidation(block entity.Block, previousBlock *entity.Block) error {
 			}
 		case block_data.TypeTraffic:
 			traffic := data.Data.(block_data.Traffic)
-			if traffic.Gb == 0 || traffic.Node == "" || traffic.Timestamp.Unix() == 0 || traffic.Client == "" {
+			if traffic.Bytes == 0 || traffic.Node == "" || traffic.Timestamp.Unix() == 0 || traffic.Client == "" {
 				return protocol_error.BlockValidationError("Invalid traffic #"+data.ID.String(), block.Number)
 			}
 		default:

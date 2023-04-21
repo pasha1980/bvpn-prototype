@@ -10,6 +10,7 @@ type ClientStorageFormat struct {
 	Id     string `json:"id"`
 	PrvKey string `json:"prvKey"`
 	PubKey string `json:"pubKey"`
+	Client string `json:"client"`
 
 	Price     float64 `json:"price"`
 	Timestamp int64   `json:"timestamp"`

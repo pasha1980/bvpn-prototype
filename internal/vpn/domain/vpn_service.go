@@ -5,6 +5,7 @@ import (
 	"bvpn-prototype/internal/infrastructure/di"
 	common_errors "bvpn-prototype/internal/infrastructure/errors"
 	"bvpn-prototype/internal/protocol"
+	"bvpn-prototype/internal/protocol/entity/block_data"
 	"bvpn-prototype/internal/vpn/errors"
 	"bvpn-prototype/internal/vpn/storage"
 	"bvpn-prototype/utils"
@@ -12,10 +13,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/songgao/water"
 	"net"
+	"time"
 )
 
 type VpnService interface {
-	CreateConnection() (*PublicProfile, error)
+	CreateConnection(clientAddr string) (*PublicProfile, error)
 	BreakConnection(id uuid.UUID) error
 }
 
@@ -24,6 +26,7 @@ type VpnServiceImpl struct {
 
 	conn     net.Conn
 	listener net.Listener
+	connMap  map[string]Connection
 }
 
 func (s *VpnServiceImpl) Init() error {
@@ -45,7 +48,7 @@ func (s *VpnServiceImpl) Init() error {
 	return nil
 }
 
-func (s *VpnServiceImpl) CreateConnection() (*PublicProfile, error) {
+func (s *VpnServiceImpl) CreateConnection(clientAddr string) (*PublicProfile, error) {
 	chainService := di.Get("chain_public").(ChainPublicService)
 	offer, err := chainService.GetMyLastOffer()
 	if err != nil {
@@ -56,10 +59,15 @@ func (s *VpnServiceImpl) CreateConnection() (*PublicProfile, error) {
 		return nil, errors.NoOfferError()
 	}
 
-	profile := protocol.GenerateVpnProfile(*offer)
+	profile := protocol.GenerateVpnProfile(*offer, clientAddr)
 	_, err = s.profileRepo.Save(profile)
 	if err != nil {
 		return nil, common_errors.StorageError(err.Error())
+	}
+
+	s.connMap[profile.Id.String()] = Connection{
+		Profile: profile,
+		Traffic: 0,
 	}
 
 	pub := ProfileToPub(profile)
@@ -77,6 +85,23 @@ func (s *VpnServiceImpl) BreakConnection(id uuid.UUID) error {
 		if err != nil {
 			return common_errors.StorageError(err.Error())
 		}
+	}
+
+	connection, ok := s.connMap[id.String()]
+	if !ok {
+		return nil // todo
+	}
+
+	chainService := di.Get("chain_public").(ChainPublicService)
+	result := block_data.Traffic{
+		Timestamp: time.Now(),
+		Node:      protocol.GetMyAddr(),
+		Client:    connection.Profile.Client,
+		Bytes:     connection.Traffic,
+	}
+	err = chainService.SaveTraffic(result)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -120,7 +145,8 @@ func (s *VpnServiceImpl) listenConn(iface *water.Interface, errCh chan error) {
 			return
 		}
 
-		// todo
+		// todo: counting traffic
+		// todo: encryption
 
 		_, err = iface.Write(message[:n])
 		if err != nil {
@@ -140,7 +166,7 @@ func (s *VpnServiceImpl) listenInterface(iface *water.Interface, errCh chan erro
 			continue
 		}
 
-		// todo
+		// todo: decryption
 
 		_, err = s.conn.Write(packet[:n])
 		if err != nil {
@@ -162,5 +188,6 @@ func NewVpnService() (*VpnServiceImpl, error) {
 
 	return &VpnServiceImpl{
 		profileRepo: profileRepo,
+		connMap:     make(map[string]Connection),
 	}, nil
 }

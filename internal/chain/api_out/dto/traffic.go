@@ -23,7 +23,7 @@ func TrafficToDto(entity block_data.ChainStored) Traffic {
 		PubKey:    entity.PubKey,
 		Node:      traffic.Node,
 		Client:    traffic.Client,
-		Gb:        traffic.Gb,
+		Gb:        traffic.Bytes,
 		Timestamp: traffic.Timestamp.Unix(),
 	}
 }

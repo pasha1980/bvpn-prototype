@@ -7,7 +7,7 @@ import (
 type Traffic struct {
 	Node      string
 	Client    string
-	Gb        float64
+	Bytes     float64
 	Timestamp time.Time
 }
 

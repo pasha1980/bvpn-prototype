@@ -14,7 +14,7 @@ type Traffic struct {
 	PubKey    string
 	Node      string
 	Client    string
-	Gb        float64
+	Bytes     float64
 	Timestamp int64
 }
 
@@ -32,7 +32,7 @@ func (t *Traffic) ToChainStored() block_data.ChainStored {
 		Data: block_data.Traffic{
 			Node:      t.Node,
 			Client:    t.Client,
-			Gb:        t.Gb,
+			Bytes:     t.Bytes,
 			Timestamp: time.Unix(t.Timestamp, 0),
 		},
 	}
@@ -47,7 +47,7 @@ func TrafficToModel(data block_data.ChainStored, blockId uint) Traffic {
 		PubKey:    data.PubKey,
 		Node:      traffic.Node,
 		Client:    traffic.Client,
-		Gb:        traffic.Gb,
+		Bytes:     traffic.Bytes,
 		Timestamp: traffic.Timestamp.Unix(),
 	}
 }

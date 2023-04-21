@@ -25,7 +25,7 @@ func (t *Traffic) ToEntity() block_data.ChainStored {
 		Data: block_data.Traffic{
 			Node:      t.Node,
 			Client:    t.Client,
-			Gb:        t.Gb,
+			Bytes:     t.Gb,
 			Timestamp: time.Unix(t.Timestamp, 0),
 		},
 	}
