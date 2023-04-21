@@ -80,3 +80,9 @@ func GetAddr() string {
 	sha3.ShakeSum128(h, buf)
 	return fmt.Sprintf("%x", h)
 }
+
+func GetPubKey() string {
+	st := storage()
+	buf, _ := x509.MarshalPKIXPublicKey(&st.pub)
+	return fmt.Sprintf("%x", buf)
+}

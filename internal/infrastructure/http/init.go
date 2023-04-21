@@ -1,6 +1,7 @@
 package http
 
 import (
+	"bvpn-prototype/internal/common"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -11,7 +12,7 @@ type TLSConfig struct {
 
 func Init(port string, tlsConfig *TLSConfig) error {
 	app := fiber.New(fiber.Config{
-		AppName:               "BVPN Prototype",
+		AppName:               common.PROJECT_NAME,
 		ErrorHandler:          errorHandler,
 		DisableStartupMessage: true,
 	})

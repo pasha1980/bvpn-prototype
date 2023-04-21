@@ -29,7 +29,7 @@ type ChainServiceImpl struct {
 }
 
 func (s *ChainServiceImpl) GetUTXOs() ([]block_data.ChainStored, error) {
-	utxos, err := s.chainRepo.GetMyUTXOs()
+	utxos, err := s.chainRepo.GetUTXOs(protocol.GetMyAddr())
 	if err != nil {
 		return nil, errors.StorageError(err.Error())
 	}
@@ -143,6 +143,19 @@ func (s *ChainServiceImpl) ValidateStoredChain() {
 	if err != nil {
 		err.(errors.Error).Log()
 	}
+}
+
+func (s *ChainServiceImpl) GetMyLastOffer() (*block_data.Offer, error) {
+	data, err := s.chainRepo.GetLastOffer(protocol.GetMyPubKey())
+	if err != nil {
+		return nil, errors.StorageError(err.Error())
+	}
+
+	if data == nil {
+		return nil, nil
+	}
+
+	return data.Data.(*block_data.Offer), nil
 }
 
 func (s *ChainServiceImpl) replaceChain(chain []entity.Block) error {

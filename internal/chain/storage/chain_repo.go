@@ -5,7 +5,6 @@ import (
 	"bvpn-prototype/internal/infrastructure/config"
 	"bvpn-prototype/internal/protocol/entity"
 	"bvpn-prototype/internal/protocol/entity/block_data"
-	"bvpn-prototype/internal/protocol/signer"
 	"errors"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -241,13 +240,12 @@ func (r *ChainRepository) ReplaceChain(chain []entity.Block) error {
 	return tx.Error
 }
 
-func (r *ChainRepository) GetMyUTXOs() ([]block_data.ChainStored, error) {
+func (r *ChainRepository) GetUTXOs(addr string) ([]block_data.ChainStored, error) {
 	var utxos []block_data.ChainStored
 	var utxoModels []models.Transaction
 
-	myAddr := signer.GetAddr()
-	sub := r.db.Select("o. from").Table("tx").Where("o.to = ?", myAddr)
-	err := r.db.Where(models.Transaction{To: myAddr}).Where("ref not in (?)", sub).Find(&utxoModels).Error
+	sub := r.db.Select("o. from").Table("tx").Where("o.to = ?", addr)
+	err := r.db.Where(models.Transaction{To: addr}).Where("ref not in (?)", sub).Find(&utxoModels).Error
 	if err != nil {
 		return nil, err
 	}
@@ -257,6 +255,18 @@ func (r *ChainRepository) GetMyUTXOs() ([]block_data.ChainStored, error) {
 	}
 
 	return utxos, nil
+}
+
+func (r *ChainRepository) GetLastOffer(pubKey string) (*block_data.ChainStored, error) {
+	var offerModel models.Offer
+
+	err := r.db.Where(models.Offer{PubKey: pubKey}).Order("timestamp asc").Last(&offerModel).Error
+	if err != nil {
+		return nil, err
+	}
+
+	cs := offerModel.ToChainStored()
+	return &cs, nil
 }
 
 func (r *ChainRepository) Start() {

@@ -1,7 +1,7 @@
 package api_in
 
 import (
-	"bvpn-prototype/internal/infrastructure/common"
+	"bvpn-prototype/internal/common"
 	"bvpn-prototype/internal/infrastructure/di"
 	"bvpn-prototype/internal/infrastructure/errors/http_errors"
 	"bvpn-prototype/internal/peer/api_in/dto"

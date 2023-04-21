@@ -12,5 +12,6 @@ type ChainRepository interface {
 	GetChain(limit *int, offset *int) ([]entity.Block, error)
 	SaveBlock(block entity.Block) (*entity.Block, error)
 	ReplaceChain(chain []entity.Block) error
-	GetMyUTXOs() ([]block_data.ChainStored, error)
+	GetUTXOs(addr string) ([]block_data.ChainStored, error)
+	GetLastOffer(pubKey string) (*block_data.ChainStored, error)
 }

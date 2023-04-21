@@ -103,6 +103,14 @@ func InitKeys() {
 	signer.Init()
 }
 
+func GetMyAddr() string {
+	return signer.GetAddr()
+}
+
+func GetMyPubKey() string {
+	return signer.GetPubKey()
+}
+
 func whoIsNext() string {
 	// todo
 	return ""

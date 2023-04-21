@@ -3,7 +3,7 @@ package api_in
 import (
 	"bvpn-prototype/internal/chain/api_in/dto"
 	"bvpn-prototype/internal/chain/domain"
-	"bvpn-prototype/internal/infrastructure/common"
+	"bvpn-prototype/internal/common"
 	"bvpn-prototype/internal/infrastructure/di"
 	"bvpn-prototype/internal/infrastructure/errors/http_errors"
 	"github.com/go-playground/validator/v10"

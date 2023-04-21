@@ -2,7 +2,7 @@ package domain
 
 import (
 	"bvpn-prototype/internal/cli/errors"
-	"bvpn-prototype/internal/infrastructure/common"
+	"bvpn-prototype/internal/common"
 	"bvpn-prototype/internal/infrastructure/config"
 	"bvpn-prototype/internal/infrastructure/di"
 	"bvpn-prototype/internal/infrastructure/http"

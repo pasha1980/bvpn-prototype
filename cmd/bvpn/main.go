@@ -118,11 +118,11 @@ func parseConfig() (*config.Config, error) {
 
 	var yamlCfg struct {
 		Http struct {
-			Port string `yaml:"port"`
+			Port string `yaml:"port" validate:"number"`
 			URL  string `yaml:"url" validate:"http_url"`
 		} `yaml:"http"`
 		VPN struct {
-			Port  string `yaml:"port"`
+			Port  string `yaml:"port" validate:"number"`
 			Proto string `yaml:"proto" validate:"oneof=udp tcp"`
 		}
 		Peers []struct {

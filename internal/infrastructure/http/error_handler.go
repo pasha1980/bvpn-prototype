@@ -1,7 +1,7 @@
 package http
 
 import (
-	"bvpn-prototype/internal/infrastructure/common"
+	"bvpn-prototype/internal/common"
 	"bvpn-prototype/internal/infrastructure/errors"
 	"github.com/gofiber/fiber/v2"
 )

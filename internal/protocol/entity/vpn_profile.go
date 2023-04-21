@@ -1,7 +1,13 @@
 package entity
 
+import (
+	"bvpn-prototype/internal/protocol/entity/block_data"
+	"github.com/google/uuid"
+)
+
 type Profile struct {
-	Id     string
+	Id     uuid.UUID
+	Offer  block_data.Offer
 	PrvKey []byte
 	PubKey []byte
 }
