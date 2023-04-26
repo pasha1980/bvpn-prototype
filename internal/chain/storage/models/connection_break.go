@@ -21,7 +21,7 @@ func (b ConnectionBreak) TableName() string {
 }
 
 func (b *ConnectionBreak) ToChainStored() block_data.ChainStored {
-	id, _ := uuid.FromBytes([]byte(b.Ref))
+	id, _ := uuid.Parse(b.Ref)
 	return block_data.ChainStored{
 		ID:     id,
 		Type:   block_data.TypeConnectionBreak,

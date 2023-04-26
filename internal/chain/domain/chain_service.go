@@ -82,6 +82,7 @@ func (s *ChainServiceImpl) AddToMempool(element block_data.ChainStored, from *en
 			IP:  utils.GetIp(url),
 		}
 
+		// todo: decide
 		rules := node_validators.GetValidationRules()
 		for _, rule := range rules {
 			err := rule(node)

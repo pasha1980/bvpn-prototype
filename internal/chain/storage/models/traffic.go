@@ -23,7 +23,7 @@ func (t Traffic) TableName() string {
 }
 
 func (t *Traffic) ToChainStored() block_data.ChainStored {
-	id, _ := uuid.FromBytes([]byte(t.Ref))
+	id, _ := uuid.Parse(t.Ref)
 	return block_data.ChainStored{
 		ID:     id,
 		Type:   block_data.TypeTraffic,

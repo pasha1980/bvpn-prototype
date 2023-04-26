@@ -49,7 +49,12 @@ func (d *BlockDto) ToEntity() entity.Block {
 			})
 			break
 		default:
-			continue
+			data = append(data, block_data.ChainStored{
+				ID:   dto.ID,
+				Type: dto.Type,
+				Data: dto.Data.(map[string]any),
+			})
+			break
 		}
 	}
 

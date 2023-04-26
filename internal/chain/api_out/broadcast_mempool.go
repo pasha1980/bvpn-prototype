@@ -27,6 +27,8 @@ func BroadcastMempool(stored block_data.ChainStored, nodes []entity.Node) {
 	case block_data.TypeConnectionBreak:
 		requestDto = dto.TrafficToDto(stored)
 		method = "/chain/addConnectionBreak"
+	default:
+		return
 	}
 
 	for _, node := range nodes {

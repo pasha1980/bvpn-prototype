@@ -5,7 +5,6 @@ import (
 	"bvpn-prototype/internal/infrastructure/config"
 	"bvpn-prototype/internal/protocol/entity"
 	"bvpn-prototype/internal/protocol/entity/block_data"
-	"errors"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -105,7 +104,12 @@ func (r *ChainRepository) saveData(block *entity.Block) error {
 			}
 			break
 		default:
-			return errors.New("Invalid data type")
+			model := models.UndefinedDataModel(data, uint(block.Number))
+			err := r.db.Save(model).Error
+			if err != nil {
+				return err
+			}
+			break
 		}
 	}
 
@@ -232,7 +236,7 @@ func (r *ChainRepository) ReplaceChain(chain []entity.Block) error {
 				tx.Save(models.TrafficToModel(data, uint(block.Number)))
 				break
 			default:
-				return errors.New("Invalid data type")
+				tx.Save(models.UndefinedDataModel(data, uint(block.Number)))
 			}
 		}
 	}
@@ -317,6 +321,7 @@ func NewChainRepo() (*ChainRepository, error) {
 	err = db.AutoMigrate(&models.Traffic{})
 	err = db.AutoMigrate(&models.ConnectionBreak{})
 	err = db.AutoMigrate(&models.Offer{})
+	err = db.AutoMigrate(&models.UndefinedData{})
 
 	if err != nil {
 		return nil, err

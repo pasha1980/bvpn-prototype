@@ -22,7 +22,7 @@ func (o Offer) TableName() string {
 }
 
 func (o *Offer) ToChainStored() block_data.ChainStored {
-	id, _ := uuid.FromBytes([]byte(o.Ref))
+	id, _ := uuid.Parse(o.Ref)
 	return block_data.ChainStored{
 		ID:     id,
 		Type:   block_data.TypeOffer,

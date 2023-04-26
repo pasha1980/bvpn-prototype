@@ -32,7 +32,7 @@ func typeValidation(block entity.Block, reader interfaces.ChainReader) error {
 				return errors.BlockValidationError("Invalid traffic #"+data.ID.String(), block.Number)
 			}
 		default:
-			return nil
+			continue
 		}
 	}
 
