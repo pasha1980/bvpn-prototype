@@ -2,6 +2,8 @@ package config
 
 import "bvpn-prototype/internal/protocol/entity"
 
+const VERSION = "0.0.1-prototype"
+
 var c *Config
 
 type Config struct {
