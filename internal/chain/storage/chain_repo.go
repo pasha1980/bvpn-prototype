@@ -276,6 +276,7 @@ func (r *ChainRepository) Start() {
 func (r *ChainRepository) Next() *entity.Block {
 	r.readerIndex++
 	lastBlock, _ := r.GetLastBlock() // todo: errors
+	r.getData(lastBlock)             // todo: errors
 	if r.readerIndex > lastBlock.Number {
 		return nil
 	}
@@ -286,11 +287,13 @@ func (r *ChainRepository) Next() *entity.Block {
 
 func (r *ChainRepository) Last() *entity.Block {
 	block, _ := r.GetLastBlock() // todo: errors
+	r.getData(block)             // todo: errors
 	return block
 }
 
 func (r *ChainRepository) Previous(number uint64) *entity.Block {
 	block, _ := r.GetBlockByNumber(number - 1)
+	r.getData(block) // todo: errors
 	return block
 }
 
