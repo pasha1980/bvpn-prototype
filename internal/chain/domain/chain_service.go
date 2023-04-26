@@ -9,6 +9,7 @@ import (
 	"bvpn-prototype/internal/protocol/entity"
 	"bvpn-prototype/internal/protocol/entity/block_data"
 	"bvpn-prototype/internal/protocol/interfaces"
+	"bvpn-prototype/internal/protocol/params"
 	"bvpn-prototype/internal/protocol/signer"
 	"bvpn-prototype/internal/protocol/validators/node_validators"
 	"bvpn-prototype/utils"
@@ -186,7 +187,7 @@ func (s *ChainServiceImpl) validateBlock(block entity.Block) error {
 }
 
 func (s *ChainServiceImpl) createNewBlock() error {
-	data := s.mempoolRepo.GetElements(protocol.BlockCapacity)
+	data := s.mempoolRepo.GetElements(params.BlockCapacity)
 
 	newBlock, err := protocol.CreateNewBlock(s.chainReader, data)
 	if err != nil {

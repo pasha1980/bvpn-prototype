@@ -2,7 +2,7 @@ package node_validators
 
 import (
 	"bvpn-prototype/internal/protocol/entity"
-	"bvpn-prototype/internal/protocol/protocol_error"
+	"bvpn-prototype/internal/protocol/errors"
 	"github.com/go-ping/ping"
 	"time"
 )
@@ -19,7 +19,7 @@ func pingCheck(peer entity.Node) error {
 
 	stat := pinger.Statistics()
 	if stat.PacketsRecv == 0 {
-		return protocol_error.PeerValidationError("Peer unavailable")
+		return errors.PeerValidationError("Peer unavailable")
 	}
 
 	return nil

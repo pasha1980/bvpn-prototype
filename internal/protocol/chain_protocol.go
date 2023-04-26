@@ -5,6 +5,7 @@ import (
 	"bvpn-prototype/internal/protocol/entity/block_data"
 	"bvpn-prototype/internal/protocol/hasher"
 	"bvpn-prototype/internal/protocol/interfaces"
+	"bvpn-prototype/internal/protocol/params"
 	"bvpn-prototype/internal/protocol/signer"
 	"bvpn-prototype/internal/protocol/validators/block_validators"
 	"github.com/google/uuid"
@@ -12,9 +13,6 @@ import (
 	"math/rand"
 	"time"
 )
-
-const BlockCapacity = 1048576
-const TimeToWait = 10 * time.Second
 
 func ValidateChain(reader interfaces.ChainReader) error {
 	block := reader.Last()
@@ -41,11 +39,11 @@ func ValidateChain(reader interfaces.ChainReader) error {
 
 // todo
 func AddInitialBlock() error {
-	timestamp, _ := time.Parse("2006-01-02 15:04:05", entity.InitialBlockTimestamp)
+	timestamp, _ := time.Parse("2006-01-02 15:04:05", params.InitialBlockTimestamp)
 
 	initialBlock := entity.Block{
 		Number:       1,
-		PreviousHash: entity.InitialBlockPrevHash,
+		PreviousHash: params.InitialBlockPrevHash,
 		TimeStamp:    timestamp,
 		Data:         []block_data.ChainStored{},
 		CreatedBy:    "0",
@@ -136,7 +134,7 @@ func whoIsNext(reader interfaces.ChainReader) string {
 func getLastConnectionBreaks(reader interfaces.ChainReader) map[string]int {
 	block := reader.Last()
 	var connectionBreaks map[string]int
-	breaksBorder := time.Now().Add(-1 * 30 * 24 * time.Hour)
+	breaksBorder := time.Now().Add(-1 * params.ConnectionBreaksValidPeriod)
 	for {
 		if block.TimeStamp.Before(breaksBorder) {
 			break
@@ -167,7 +165,7 @@ func getLastTraffics(reader interfaces.ChainReader) map[string]int {
 
 	block := reader.Last()
 	var nodesTr map[string]int
-	border := time.Now().Add(-1 * 10 * 24 * time.Hour)
+	border := time.Now().Add(-1 * params.TrafficValidPeriod)
 	for {
 		if block.TimeStamp.Before(border) {
 			break
@@ -204,6 +202,6 @@ func getLastTraffics(reader interfaces.ChainReader) map[string]int {
 }
 
 func waitUntilMyTurn(previousBlockTime time.Time) {
-	nextTimeStamp := previousBlockTime.Add(TimeToWait)
+	nextTimeStamp := previousBlockTime.Add(params.TimeToWaitNextBlock)
 	time.Sleep(nextTimeStamp.Sub(time.Now()))
 }

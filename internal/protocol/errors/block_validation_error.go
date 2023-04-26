@@ -1,4 +1,4 @@
-package protocol_error
+package errors
 
 import (
 	"bvpn-prototype/internal/infrastructure/errors"

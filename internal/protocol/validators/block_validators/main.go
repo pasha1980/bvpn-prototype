@@ -11,6 +11,7 @@ var blockValidationRules = []func(block entity.Block, reader interfaces.ChainRea
 	signValidation,
 	typeValidation,
 	offerValidation,
+	dataSizeValidation,
 }
 
 func GetValidationRules() []func(block entity.Block, reader interfaces.ChainReader) error {
