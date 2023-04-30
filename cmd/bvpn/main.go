@@ -10,7 +10,7 @@ import (
 	peer_domain "bvpn-prototype/internal/peer/domain"
 	"bvpn-prototype/internal/protocol/entity"
 	vpn_domain "bvpn-prototype/internal/vpn/domain"
-	"fmt"
+	"bvpn-prototype/tests"
 	"github.com/go-playground/validator/v10"
 	"github.com/sarulabs/di"
 	"gopkg.in/yaml.v3"
@@ -22,26 +22,21 @@ const defaultConfigFile = "./config.yaml"
 var configFile = defaultConfigFile
 
 func main() {
-	logger.Init()
-	setupDi()
-
-	_, err := parseConfig()
-	if err != nil {
-		panic(err)
-	}
-
 	cli, _ := cli_api.NewCliApi()
-
 	command := os.Args[1]
 	switch command {
+	case "test", "check":
+		cli.Test()
+		break
+
 	case "init", "run":
+		preparation()
 		cli.Init()
 		break
 
 	case "make":
-		fmt.Println(8)
+		preparation()
 		switch os.Args[2] {
-
 		case "transaction":
 		case "tx":
 			cli.MakeTx()
@@ -52,6 +47,25 @@ func main() {
 			break
 		}
 		break
+	}
+}
+
+func preparation() {
+	checkMe()
+	logger.Init()
+	setupDi()
+
+	_, err := parseConfig()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func checkMe() {
+	result := tests.Run(tests.TypeInfrastructure)
+	if !result.IsSucceed() {
+		result.Print()
+		os.Exit(1)
 	}
 }
 

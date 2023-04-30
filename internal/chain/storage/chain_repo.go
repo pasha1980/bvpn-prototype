@@ -316,12 +316,14 @@ func NewChainRepo() (*ChainRepository, error) {
 		return nil, err
 	}
 
-	err = db.AutoMigrate(&models.Block{})
-	err = db.AutoMigrate(&models.Transaction{})
-	err = db.AutoMigrate(&models.Traffic{})
-	err = db.AutoMigrate(&models.ConnectionBreak{})
-	err = db.AutoMigrate(&models.Offer{})
-	err = db.AutoMigrate(&models.UndefinedData{})
+	err = db.AutoMigrate(
+		&models.Block{},
+		&models.Transaction{},
+		&models.Traffic{},
+		&models.ConnectionBreak{},
+		&models.Offer{},
+		&models.UndefinedData{},
+	)
 
 	if err != nil {
 		return nil, err

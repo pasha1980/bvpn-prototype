@@ -97,14 +97,14 @@ func (r *MempoolRepository) updateData() {
 		r.storeData()
 	}
 
-	err = json.Unmarshal(jsonEncoded, &r)
+	err = json.Unmarshal(jsonEncoded, &r.Data)
 	if err != nil {
 		r.storeData()
 	}
 }
 
 func (r *MempoolRepository) storeData() {
-	jsonEncoded, _ := json.Marshal(r)
+	jsonEncoded, _ := json.Marshal(r.Data)
 	base64Encoded := base64.StdEncoding.EncodeToString(jsonEncoded)
 	err := os.WriteFile(config.Get().StorageDirectory+"/mempool.bvpn", []byte(base64Encoded), 0666)
 	if err != nil {

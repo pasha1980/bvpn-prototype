@@ -71,6 +71,10 @@ func (a *CliApi) MakeOffer() {
 	}
 }
 
+func (a *CliApi) Test() {
+	// todo
+}
+
 func NewCliApi() (*CliApi, error) {
 	return &CliApi{}, nil
 }
