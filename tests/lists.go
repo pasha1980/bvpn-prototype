@@ -13,10 +13,10 @@ var infrastructureTestList = []func(t *testing.T) error{
 	infrastructure.It_is_correct_mempool_format,
 	infrastructure.It_is_correct_peer_storage_format,
 	infrastructure.It_is_correct_profile_storage_format,
-	infrastructure.It_is_correct_profile_storage_format,
+	infrastructure.It_is_correct_prv_key_format,
 	infrastructure.I_have_sudo_permissions,
 	infrastructure.It_is_possible_to_use_ip_command,
-	infrastructure.It_is_stable_internet_conenction,
+	infrastructure.It_is_stable_internet_connection,
 	infrastructure.It_is_correct_config_file,
 }
 

@@ -23,6 +23,12 @@ var configFile = defaultConfigFile
 
 func main() {
 	cli, _ := cli_api.NewCliApi()
+
+	if len(os.Args) == 1 {
+		cli.Introduce()
+		return
+	}
+
 	command := os.Args[1]
 	switch command {
 	case "test", "check":

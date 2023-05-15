@@ -75,6 +75,10 @@ func (a *CliApi) Test() {
 	// todo
 }
 
+func (*CliApi) Introduce() {
+	// todo
+}
+
 func NewCliApi() (*CliApi, error) {
 	return &CliApi{}, nil
 }
