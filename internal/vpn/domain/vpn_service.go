@@ -7,7 +7,6 @@ import (
 	"bvpn-prototype/internal/protocol"
 	"bvpn-prototype/internal/protocol/entity/block_data"
 	"bvpn-prototype/internal/vpn/errors"
-	"bvpn-prototype/internal/vpn/storage"
 	"bvpn-prototype/utils"
 	"fmt"
 	"github.com/google/uuid"
@@ -22,8 +21,6 @@ type VpnService interface {
 }
 
 type VpnServiceImpl struct {
-	profileRepo ProfileRepo
-
 	conn     net.Conn
 	listener net.Listener
 	connMap  map[string]Connection
@@ -60,7 +57,7 @@ func (s *VpnServiceImpl) CreateConnection(clientAddr string) (*PublicProfile, er
 	}
 
 	profile := protocol.GenerateVpnProfile(*offer, clientAddr)
-	_, err = s.profileRepo.Save(profile)
+	_, err = s.profileRepo().Save(profile)
 	if err != nil {
 		return nil, common_errors.StorageError(err.Error())
 	}
@@ -75,13 +72,13 @@ func (s *VpnServiceImpl) CreateConnection(clientAddr string) (*PublicProfile, er
 }
 
 func (s *VpnServiceImpl) BreakConnection(id uuid.UUID) error {
-	ok, err := s.profileRepo.IsExist(id)
+	ok, err := s.profileRepo().IsExist(id)
 	if err != nil {
 		return common_errors.StorageError(err.Error())
 	}
 
 	if ok {
-		err = s.profileRepo.Remove(id)
+		err = s.profileRepo().Remove(id)
 		if err != nil {
 			return common_errors.StorageError(err.Error())
 		}
@@ -180,14 +177,12 @@ func (s *VpnServiceImpl) listenErrors(errCh chan error) {
 	// todo
 }
 
-func NewVpnService() (*VpnServiceImpl, error) {
-	profileRepo, err := storage.NewProfileRepo()
-	if err != nil {
-		return nil, err
-	}
+func (*VpnServiceImpl) profileRepo() ProfileRepo {
+	return di.Get("vpn_profile_repo").(ProfileRepo)
+}
 
+func NewVpnService() (*VpnServiceImpl, error) {
 	return &VpnServiceImpl{
-		profileRepo: profileRepo,
-		connMap:     make(map[string]Connection),
+		connMap: make(map[string]Connection),
 	}, nil
 }

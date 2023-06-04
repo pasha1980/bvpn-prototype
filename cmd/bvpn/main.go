@@ -1,15 +1,20 @@
 package main
 
 import (
+	chain_gateway "bvpn-prototype/internal/chain/api_gateway"
 	chain_domain "bvpn-prototype/internal/chain/domain"
+	chain_storage "bvpn-prototype/internal/chain/storage"
 	cli_api "bvpn-prototype/internal/cli/api"
 	cli_domain "bvpn-prototype/internal/cli/domain"
 	"bvpn-prototype/internal/infrastructure/config"
 	internal_di "bvpn-prototype/internal/infrastructure/di"
 	"bvpn-prototype/internal/infrastructure/logger"
+	peer_gateway "bvpn-prototype/internal/peer/api_gateway"
 	peer_domain "bvpn-prototype/internal/peer/domain"
+	peer_storage "bvpn-prototype/internal/peer/storage"
 	"bvpn-prototype/internal/protocol/entity"
 	vpn_domain "bvpn-prototype/internal/vpn/domain"
+	vpn_storage "bvpn-prototype/internal/vpn/storage"
 	"bvpn-prototype/tests"
 	"github.com/go-playground/validator/v10"
 	"github.com/sarulabs/di"
@@ -32,6 +37,7 @@ func main() {
 	command := os.Args[1]
 	switch command {
 	case "test", "check":
+		setupDi("test")
 		cli.Test()
 		break
 
@@ -59,7 +65,7 @@ func main() {
 func preparation() {
 	checkMe()
 	logger.Init()
-	setupDi()
+	setupDi("live")
 
 	_, err := parseConfig()
 	if err != nil {
@@ -75,8 +81,10 @@ func checkMe() {
 	}
 }
 
-func setupDi() {
+func setupDi(env string) {
 	app, _ := di.NewBuilder()
+
+	// todo: test dependencies
 
 	app.Add(di.Def{
 		Name: "cli_service",
@@ -124,6 +132,48 @@ func setupDi() {
 		Name: "vpn_service",
 		Build: func(ctn di.Container) (interface{}, error) {
 			return vpn_domain.NewVpnService()
+		},
+	})
+
+	app.Add(di.Def{
+		Name: "chain_repo",
+		Build: func(ctn di.Container) (interface{}, error) {
+			return chain_storage.NewChainRepo()
+		},
+	})
+
+	app.Add(di.Def{
+		Name: "mempool",
+		Build: func(ctn di.Container) (interface{}, error) {
+			return chain_storage.NewMempoolRepo()
+		},
+	})
+
+	app.Add(di.Def{
+		Name: "peer_repo",
+		Build: func(ctn di.Container) (interface{}, error) {
+			return peer_storage.NewPeerRepo()
+		},
+	})
+
+	app.Add(di.Def{
+		Name: "vpn_profile_repo",
+		Build: func(ctn di.Container) (interface{}, error) {
+			return vpn_storage.NewProfileRepo()
+		},
+	})
+
+	app.Add(di.Def{
+		Name: "chain_api_gateway",
+		Build: func(ctn di.Container) (interface{}, error) {
+			return chain_gateway.NewChainApiGateway()
+		},
+	})
+
+	app.Add(di.Def{
+		Name: "peer_api_gateway",
+		Build: func(ctn di.Container) (interface{}, error) {
+			return peer_gateway.NewPeerApiGateway()
 		},
 	})
 

@@ -1,8 +1,6 @@
 package domain
 
 import (
-	"bvpn-prototype/internal/chain/api_out"
-	"bvpn-prototype/internal/chain/storage"
 	"bvpn-prototype/internal/infrastructure/di"
 	"bvpn-prototype/internal/infrastructure/errors"
 	"bvpn-prototype/internal/protocol"
@@ -24,13 +22,10 @@ type ChainService interface {
 }
 
 type ChainServiceImpl struct {
-	chainRepo   ChainRepository
-	chainReader interfaces.ChainReader
-	mempoolRepo MempoolRepository
 }
 
 func (s *ChainServiceImpl) GetUTXOs() ([]block_data.ChainStored, error) {
-	utxos, err := s.chainRepo.GetUTXOs(protocol.GetMyAddr())
+	utxos, err := s.chainRepo().GetUTXOs(protocol.GetMyAddr())
 	if err != nil {
 		return nil, errors.StorageError(err.Error())
 	}
@@ -40,10 +35,10 @@ func (s *ChainServiceImpl) GetUTXOs() ([]block_data.ChainStored, error) {
 
 func (s *ChainServiceImpl) MakeNew(element block_data.ChainStored) (*block_data.ChainStored, error) {
 	protocol.PrepareEntity(&element)
-	s.mempoolRepo.AddNewElement(element)
+	s.mempool().AddNewElement(element)
 
 	peers := di.Get("peer_public").(PeerPublicService).GetPeers(nil)
-	go api_out.BroadcastMempool(element, peers) // todo
+	go s.apiGateway().To(peers).BroadcastMempool(element)
 	return &element, nil
 }
 
@@ -53,7 +48,7 @@ func (s *ChainServiceImpl) UpdateChain() {
 
 	peers := di.Get("peer_public").(PeerPublicService).GetPeers(nil)
 	for _, node := range peers {
-		peerChain := api_out.GetFullChain(node) // todo
+		peerChain := s.apiGateway().From(node).GetChain()
 		chains = append(chains, peerChain)
 	}
 
@@ -93,9 +88,9 @@ func (s *ChainServiceImpl) AddToMempool(element block_data.ChainStored, from *en
 	}
 
 	peers := di.Get("peer_public").(PeerPublicService).GetPeers(from)
-	if !s.mempoolRepo.IsExist(element.ID) {
-		s.mempoolRepo.AddNewElement(element)
-		go api_out.BroadcastMempool(element, peers)
+	if !s.mempool().IsExist(element.ID) {
+		s.mempool().AddNewElement(element)
+		go s.apiGateway().To(peers).BroadcastMempool(element)
 	}
 
 	return nil
@@ -108,15 +103,15 @@ func (s *ChainServiceImpl) AddBlock(block entity.Block, from *entity.Node) error
 	}
 
 	peers := di.Get("peer_public").(PeerPublicService).GetPeers(from)
-	go api_out.BroadcastBlock(block, peers)
+	go s.apiGateway().To(peers).BroadcastBlock(block)
 
-	_, err = s.chainRepo.SaveBlock(block)
+	_, err = s.chainRepo().SaveBlock(block)
 	if err != nil {
 		return err // todo: domain error
 	}
 
 	for _, datum := range block.Data {
-		s.mempoolRepo.RemoveByIndex(datum.ID)
+		s.mempool().RemoveByIndex(datum.ID)
 	}
 
 	if block.Next == signer.GetAddr() {
@@ -127,7 +122,7 @@ func (s *ChainServiceImpl) AddBlock(block entity.Block, from *entity.Node) error
 }
 
 func (s *ChainServiceImpl) GetChain(limit *int, offset *int) ([]entity.Block, error) {
-	c, err := s.chainRepo.GetChain(limit, offset)
+	c, err := s.chainRepo().GetChain(limit, offset)
 	if err != nil {
 		return nil, errors.StorageError(err.Error())
 	}
@@ -136,14 +131,14 @@ func (s *ChainServiceImpl) GetChain(limit *int, offset *int) ([]entity.Block, er
 }
 
 func (s *ChainServiceImpl) ValidateStoredChain() {
-	err := protocol.ValidateChain(s.chainReader)
+	err := protocol.ValidateChain(s.chainReader())
 	if err != nil {
 		err.(errors.Error).Log()
 	}
 }
 
 func (s *ChainServiceImpl) GetMyLastOffer() (*block_data.Offer, error) {
-	data, err := s.chainRepo.GetLastOffer(protocol.GetMyPubKey())
+	data, err := s.chainRepo().GetLastOffer(protocol.GetMyPubKey())
 	if err != nil {
 		return nil, errors.StorageError(err.Error())
 	}
@@ -171,7 +166,7 @@ func (s *ChainServiceImpl) replaceChain(chain []entity.Block) error {
 		return err
 	}
 
-	err = s.chainRepo.ReplaceChain(chain)
+	err = s.chainRepo().ReplaceChain(chain)
 	if err != nil {
 		return errors.StorageError(err.Error())
 	}
@@ -184,13 +179,13 @@ func (*ChainServiceImpl) validateChain(chain []entity.Block) error {
 }
 
 func (s *ChainServiceImpl) validateBlock(block entity.Block) error {
-	return protocol.ValidateBlock(block, s.chainReader)
+	return protocol.ValidateBlock(block, s.chainReader())
 }
 
 func (s *ChainServiceImpl) createNewBlock() error {
-	data := s.mempoolRepo.GetElements(params.BlockCapacity)
+	data := s.mempool().GetElements(params.BlockCapacity)
 
-	newBlock, err := protocol.CreateNewBlock(s.chainReader, data)
+	newBlock, err := protocol.CreateNewBlock(s.chainReader(), data)
 	if err != nil {
 		return err
 	}
@@ -200,26 +195,28 @@ func (s *ChainServiceImpl) createNewBlock() error {
 	}
 
 	for _, datum := range data {
-		s.mempoolRepo.RemoveByIndex(datum.ID)
+		s.mempool().RemoveByIndex(datum.ID)
 	}
 
 	return nil
 }
 
+func (*ChainServiceImpl) chainRepo() ChainRepository {
+	return di.Get("chain_repo").(ChainRepository)
+}
+
+func (*ChainServiceImpl) chainReader() interfaces.ChainReader {
+	return di.Get("chain_repo").(interfaces.ChainReader)
+}
+
+func (*ChainServiceImpl) mempool() MempoolRepository {
+	return di.Get("mempool").(MempoolRepository)
+}
+
+func (*ChainServiceImpl) apiGateway() ChainApiGateway {
+	return di.Get("chain_api_gateway").(ChainApiGateway)
+}
+
 func NewChainService() (*ChainServiceImpl, error) {
-	chainRepo, err := storage.NewChainRepo()
-	if err != nil {
-		return nil, errors.StorageError(err.Error())
-	}
-
-	mempoolRepo, err := storage.NewMempoolRepo()
-	if err != nil {
-		return nil, errors.StorageError(err.Error())
-	}
-
-	return &ChainServiceImpl{
-		chainRepo:   chainRepo,
-		chainReader: chainRepo,
-		mempoolRepo: mempoolRepo,
-	}, nil
+	return &ChainServiceImpl{}, nil
 }

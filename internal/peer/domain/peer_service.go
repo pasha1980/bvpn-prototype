@@ -1,10 +1,8 @@
 package domain
 
 import (
+	"bvpn-prototype/internal/infrastructure/di"
 	"bvpn-prototype/internal/infrastructure/errors"
-	"bvpn-prototype/internal/peer/api_out"
-	peer_errors "bvpn-prototype/internal/peer/errors"
-	"bvpn-prototype/internal/peer/storage"
 	"bvpn-prototype/internal/protocol"
 	"bvpn-prototype/internal/protocol/entity"
 )
@@ -15,7 +13,6 @@ type PeerService interface {
 }
 
 type PeerServiceImpl struct {
-	peerRepo PeerRepo
 }
 
 func (p *PeerServiceImpl) AddPeer(peer entity.Node) error {
@@ -24,17 +21,17 @@ func (p *PeerServiceImpl) AddPeer(peer entity.Node) error {
 		return err
 	}
 
-	err = p.peerRepo.Save(peer)
+	err = p.repo().Save(peer)
 	if err != nil {
 		return errors.StorageError()
 	}
-	go api_out.AddMeTo(peer)
+	go p.gateway().Peer(peer).AddMe()
 	return nil
 }
 
 func (p *PeerServiceImpl) GetPeers(except *entity.Node) []entity.Node {
 	var result []entity.Node
-	peers, err := p.peerRepo.GetAll()
+	peers, err := p.repo().GetAll()
 	if err != nil {
 		return nil
 	}
@@ -56,27 +53,23 @@ func (p *PeerServiceImpl) CheckPeers() {
 	for _, node := range peers {
 		err := p.validatePeer(node)
 		if err != nil {
-			p.peerRepo.Remove(node) // todo
+			p.repo().Remove(node)
 		}
 	}
 }
 
-func (*PeerServiceImpl) validatePeer(peer entity.Node) error {
-	ok := api_out.HealthCheck(peer)
-	if !ok {
-		return peer_errors.PeerNotAvailable(peer)
-	}
-
+func (p *PeerServiceImpl) validatePeer(peer entity.Node) error {
 	return protocol.ValidatePeer(peer)
 }
 
-func NewPeerService() (*PeerServiceImpl, error) {
-	peerRepo, err := storage.NewPeerRepo()
-	if err != nil {
-		return nil, err
-	}
+func (*PeerServiceImpl) repo() PeerRepo {
+	return di.Get("peer_repo").(PeerRepo)
+}
 
-	return &PeerServiceImpl{
-		peerRepo: peerRepo,
-	}, nil
+func (*PeerServiceImpl) gateway() PeerApiGateway {
+	return di.Get("peer_api_gateway").(PeerApiGateway)
+}
+
+func NewPeerService() (*PeerServiceImpl, error) {
+	return &PeerServiceImpl{}, nil
 }

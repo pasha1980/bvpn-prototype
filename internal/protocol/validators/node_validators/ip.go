@@ -13,7 +13,7 @@ func ipCheck(peer entity.Node) error {
 	}
 
 	if ip.IsLoopback() || ip.IsPrivate() || ip.IsInterfaceLocalMulticast() {
-		return errors.PeerValidationError("IP range is invalid") // todo: test
+		return errors.PeerValidationError("IP range is invalid")
 	}
 
 	return nil
